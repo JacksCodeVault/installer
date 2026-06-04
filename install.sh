@@ -183,20 +183,49 @@ prompt "Support email"                   "support@${APP_URL#*://}" SUPPORT_EMAIL
 echo
 echo -e "${BOLD}━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
-warn "NuSaaS does not manage a database container."
-warn "Provide connection details for your existing MySQL/MariaDB or PostgreSQL database."
+warn "The compose file includes a built-in database container."
+warn "You can use it (simpler) or connect to your own external database."
 echo
-echo -e "  ${BOLD}Supported databases:${RESET}"
-echo -e "    1) MySQL 8.0+"
-echo -e "    2) MariaDB 10.6+"
-echo -e "    3) PostgreSQL 15+"
-echo
-noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Choose database type [1]: ${RESET}")"
-case "${DB_TYPE_CHOICE:-1}" in
-  2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
-  3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
-  *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
-esac
+noninteractive_read USE_BUILTIN_DB "y" "$(echo -e "${BOLD}Use built-in database container? [Y/n]: ${RESET}")"
+if [[ "${USE_BUILTIN_DB,,}" != "n" ]]; then
+  # Built-in DB — auto-configure for Docker network
+  echo
+  echo -e "  ${BOLD}Select database engine:${RESET}"
+  echo -e "    1) MySQL 8.0+"
+  echo -e "    2) MariaDB 10.6+"
+  echo -e "    3) PostgreSQL 15+"
+  echo
+  noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Database engine [1]: ${RESET}")"
+  case "${DB_TYPE_CHOICE:-1}" in
+    2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
+    3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
+    *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
+  esac
+  DB_HOST="nusaas-db"
+  DB_PORT="${DEFAULT_DB_PORT}"
+  DB_DATABASE="nusaas"
+  DB_USERNAME="nusaas"
+  prompt_secret "Database password (set a strong password)" DB_PASSWORD
+else
+  # External database — prompt for connection details
+  echo
+  echo -e "  ${BOLD}Select database engine:${RESET}"
+  echo -e "    1) MySQL 8.0+"
+  echo -e "    2) MariaDB 10.6+"
+  echo -e "    3) PostgreSQL 15+"
+  echo
+  noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Database engine [1]: ${RESET}")"
+  case "${DB_TYPE_CHOICE:-1}" in
+    2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
+    3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
+    *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
+  esac
+  DB_HOST="nusaas-db"
+  DB_PORT="${DEFAULT_DB_PORT}"
+  DB_DATABASE="nusaas"
+  DB_USERNAME="nusaas"
+  prompt_secret "Database password (set a strong password)" DB_PASSWORD
+fi
 
 # ── 4. Download compose file ──────────────────────────────────────────────────
 COMPOSE_FILE="docker-compose.yml"
@@ -213,13 +242,6 @@ if [[ ! -f "${COMPOSE_FILE}" ]]; then
 else
   warn "${COMPOSE_FILE} already exists — skipping download."
 fi
-
-echo
-prompt "DB host"     "127.0.0.1"         DB_HOST
-prompt "DB port"     "${DEFAULT_DB_PORT}" DB_PORT
-prompt "DB name"     "nusaas"             DB_DATABASE
-prompt "DB username" "nusaas"             DB_USERNAME
-prompt_secret "DB password" DB_PASSWORD
 
 echo
 echo -e "${BOLD}━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -283,7 +305,47 @@ else
   info "Firebase skipped. You can enable it later — see docs/firebase-setup.md."
 fi
 
-# ── 5. Generate secrets ────────────────────────────────────────────────────────
+# ── 5. Preview config ───────────────────────────────────────────────────────────
+echo
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo -e "${BOLD}  Configuration Preview${RESET}"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo
+echo -e "  ${BOLD}Application${RESET}"
+echo -e "  ${CYAN}App Name${RESET}         ${APP_NAME}"
+echo -e "  ${CYAN}API URL${RESET}          ${APP_URL}"
+echo -e "  ${CYAN}Frontend URL${RESET}     ${FRONTEND_URL}"
+echo -e "  ${CYAN}Timezone${RESET}         ${APP_TIMEZONE}"
+echo -e "  ${CYAN}Currency${RESET}         ${APP_CURRENCY}"
+echo -e "  ${CYAN}Support Email${RESET}    ${SUPPORT_EMAIL}"
+echo
+echo -e "  ${BOLD}Database (${DB_CONNECTION})${RESET}"
+if [[ "${USE_BUILTIN_DB,,}" != "n" ]]; then
+  echo -e "  ${CYAN}Mode${RESET}            Built-in container"
+fi
+echo -e "  ${CYAN}Host${RESET}            ${DB_HOST}"
+echo -e "  ${CYAN}Port${RESET}            ${DB_PORT}"
+echo -e "  ${CYAN}Database${RESET}        ${DB_DATABASE}"
+echo -e "  ${CYAN}Username${RESET}        ${DB_USERNAME}"
+echo -e "  ${CYAN}Password${RESET}        ${DB_PASSWORD:+"******"}"
+echo
+echo -e "  ${BOLD}Mail${RESET}"
+echo -e "  ${CYAN}SMTP Host${RESET}       ${MAIL_HOST}"
+echo -e "  ${CYAN}SMTP Port${RESET}       ${MAIL_PORT}"
+echo -e "  ${CYAN}From Address${RESET}    ${MAIL_FROM_ADDRESS}"
+echo
+echo -e "  ${BOLD}Features${RESET}"
+echo -e "  ${CYAN}Google Login${RESET}    ${SOCIAL_LOGIN_ENABLED}"
+echo -e "  ${CYAN}Firebase${RESET}        ${PUSH_NOTIFICATIONS_ENABLED}"
+echo
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo
+noninteractive_read CONFIRM_CONFIG "y" "$(echo -e "Proceed with this configuration? [Y/n]: ${RESET}")"
+if [[ "${CONFIRM_CONFIG,,}" == "n" ]]; then
+  die "Installation cancelled. Edit the values above and re-run the installer."
+fi
+
+# ── 6. Generate secrets ────────────────────────────────────────────────────────
 info "Generating cryptographic secrets..."
 
 APP_KEY=$(gen_key)
@@ -294,7 +356,7 @@ REVERB_APP_SECRET=$(gen_secret)
 
 success "Secrets generated."
 
-# ── 6. Write .env ─────────────────────────────────────────────────────
+# ── 7. Write .env ─────────────────────────────────────────────────────
 info "Writing .env..."
 
 cat > .env << EOF
@@ -405,7 +467,7 @@ EOF
 
 success ".env written."
 
-# ── 7. Write web/.env.frontend ─────────────────────────────────────────────────
+# ── 8. Write web/.env.frontend ─────────────────────────────────────────────────
 info "Writing web/.env.frontend..."
 
 # Extract Reverb public host from APP_URL
@@ -458,18 +520,18 @@ EOF
 
 success "web/.env.frontend written."
 
-# ── 8. Pull images ────────────────────────────────────────────────────────────
+# ── 9. Pull images ────────────────────────────────────────────────────────────
 echo
 info "Pulling NuSaaS images from Docker Hub..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
 success "Images pulled."
 
-# ── 9. Start services ─────────────────────────────────────────────────────────
+# ── 10. Start services ─────────────────────────────────────────────────────────
 info "Starting services..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
 success "Services started."
 
-# ── 10. Wait for backend ──────────────────────────────────────────────────────
+# ── 11. Wait for backend ──────────────────────────────────────────────────────
 info "Waiting for backend to become healthy..."
 MAX_WAIT=120
 WAITED=0
@@ -478,14 +540,14 @@ until ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
   sleep 3
   WAITED=$((WAITED + 3))
   if [[ ${WAITED} -ge ${MAX_WAIT} ]]; then
-    die "Backend did not become healthy within ${MAX_WAIT}s. Check logs: ${COMPOSE_CMD} -f ${COMPOSE_FILE} logs backend"
+    die "Backend did not become healthy within ${MAX_WAIT}s. Check logs: ${COMPOSE_CMD} -f ${COMPOSE_FILE} logs api"
   fi
   echo -n "."
 done
 echo
 success "Backend is healthy."
 
-# ── 11. Run migrations and seeders ────────────────────────────────────────────
+# ── 12. Run migrations and seeders ────────────────────────────────────────────
 info "Running database migrations and seeding core configuration..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
   php artisan migrate --seed --force
@@ -500,7 +562,7 @@ ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
 
 success "Database ready."
 
-# ── 12. Done ──────────────────────────────────────────────────────────────────
+# ── 13. Done ──────────────────────────────────────────────────────────────────
 echo
 echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${GREEN}${BOLD}  NuSaaS is running!${RESET}"
@@ -516,9 +578,12 @@ echo -e "  3. Create your first admin account:"
 echo -e "     ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} exec api php artisan nusaas:create-admin${RESET}"
 echo
 echo -e "  ${BOLD}Useful commands:${RESET}"
-echo -e "  View logs    : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs -f${RESET}"
-echo -e "  Stop         : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} down${RESET}"
-echo -e "  Update images: ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} pull && ${COMPOSE_CMD} -f ${COMPOSE_FILE} up -d${RESET}"
+echo -e "  All logs       : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs -f${RESET}"
+echo -e "  API logs       : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs api${RESET}"
+echo -e "  DB logs        : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs db${RESET}"
+echo -e "  Check health   : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} exec api curl -sf http://localhost:4000/api/health${RESET}"
+echo -e "  Stop           : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} down${RESET}"
+echo -e "  Update images  : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} pull && ${COMPOSE_CMD} -f ${COMPOSE_FILE} up -d${RESET}"
 echo
 echo -e "  Support: ${CYAN}support@nusaas.com${RESET} | Docs: ${CYAN}https://nusaas.com/docs${RESET}"
 echo
