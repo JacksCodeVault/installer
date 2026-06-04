@@ -3,9 +3,12 @@
 # NuSaaS Installer
 # =============================================================================
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/JacksCodeVault/installer/main/install.sh | bash
+#   curl -fsSL https://get.nusaas.com/install.sh -o install.sh && bash install.sh
 #   — or —
 #   bash install.sh
+#
+# To pre-configure without prompts, set environment variables before running:
+#   APP_URL=https://api.example.com DB_PASSWORD=secret bash install.sh
 #
 # Requirements:
 #   - Docker (https://docs.docker.com/get-docker/)
@@ -30,6 +33,15 @@
 
 set -euo pipefail
 
+# ── Detect interactive mode ──────────────────────────────────────────────────
+if [[ -t 0 ]]; then
+  INTERACTIVE=true
+else
+  INTERACTIVE=false
+  warn "Non-interactive mode detected (stdin is not a terminal)."
+  warn "Set environment variables to pre-configure values, or run 'bash install.sh' for interactive setup."
+fi
+
 # ── Colours ──────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
@@ -48,6 +60,15 @@ die()     { error "$*"; exit 1; }
 
 prompt() {
   local label="$1" default="${2:-}" var_name="$3"
+  if [[ "$INTERACTIVE" == "false" ]]; then
+    if [[ -n "${!var_name:-}" ]]; then
+      info "Using $var_name from environment"
+      return
+    fi
+    eval "${var_name}='${default}'"
+    info "Using default for $var_name: ${default:-<empty>}"
+    return
+  fi
   if [[ -n "$default" ]]; then
     read -rp "$(echo -e "${BOLD}${label}${RESET} [${default}]: ")" input
     eval "${var_name}='${input:-$default}'"
@@ -59,9 +80,33 @@ prompt() {
 
 prompt_secret() {
   local label="$1" var_name="$2"
+  if [[ "$INTERACTIVE" == "false" ]]; then
+    if [[ -n "${!var_name:-}" ]]; then
+      info "Using $var_name from environment"
+      return
+    fi
+    eval "${var_name}=''"
+    info "Skipping $var_name (set ${var_name}=... to pre-configure)"
+    return
+  fi
   read -rsp "$(echo -e "${BOLD}${label}${RESET}: ")" input
   echo
   eval "${var_name}='${input}'"
+}
+
+noninteractive_read() {
+  local var_name="$1" default="${2:-}"
+  if [[ "$INTERACTIVE" == "false" ]]; then
+    if [[ -n "${!var_name:-}" ]]; then
+      info "Using $var_name from environment"
+      return
+    fi
+    eval "${var_name}='${default}'"
+    info "Using default for $var_name: ${default:-<empty>}"
+    return
+  fi
+  read -rp "$3" input
+  eval "${var_name}='${input:-$default}'"
 }
 
 gen_key() {
@@ -152,7 +197,7 @@ echo -e "    1) MySQL 8.0+"
 echo -e "    2) MariaDB 10.6+"
 echo -e "    3) PostgreSQL 15+"
 echo
-read -rp "$(echo -e "${BOLD}Choose database type [1]: ${RESET}")" DB_TYPE_CHOICE
+noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Choose database type [1]: ${RESET}")"
 case "${DB_TYPE_CHOICE:-1}" in
   2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
   3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
@@ -193,7 +238,7 @@ warn "Skip this section if you don't want users to log in with Google."
 warn "To enable it later, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env."
 warn "Setup guide: https://console.cloud.google.com → APIs & Services → Credentials"
 echo
-read -rp "$(echo -e "${BOLD}Enable Google social login? [y/N]: ${RESET}")" ENABLE_GOOGLE
+noninteractive_read ENABLE_GOOGLE "n" "$(echo -e "${BOLD}Enable Google social login? [y/N]: ${RESET}")"
 if [[ "${ENABLE_GOOGLE,,}" == "y" ]]; then
   prompt "Google Client ID"     "" GOOGLE_CLIENT_ID
   prompt "Google Client Secret" "" GOOGLE_CLIENT_SECRET
@@ -213,7 +258,7 @@ echo
 warn "Skip this section if you don't need browser push notifications."
 warn "Full setup guide: docs/firebase-setup.md"
 echo
-read -rp "$(echo -e "${BOLD}Enable Firebase push notifications? [y/N]: ${RESET}")" ENABLE_FIREBASE
+noninteractive_read ENABLE_FIREBASE "n" "$(echo -e "${BOLD}Enable Firebase push notifications? [y/N]: ${RESET}")"
 if [[ "${ENABLE_FIREBASE,,}" == "y" ]]; then
   warn "Place your Firebase service account JSON at: ${INSTALL_DIR}/firebase/service-account.json"
   warn "Then restart after setup: docker compose -f ${COMPOSE_FILE} restart backend queue"
