@@ -520,18 +520,26 @@ EOF
 
 success "web/.env.frontend written."
 
-# ── 9. Pull images ────────────────────────────────────────────────────────────
+# ── 9. Clean stale DB volume (built-in DB only) ────────────────────────────
+if [[ "${USE_BUILTIN_DB,,}" != "n" ]] && ${COMPOSE_CMD} -f "${COMPOSE_FILE}" ps 2>/dev/null | grep -q "unhealthy"; then
+  warn "Previous DB volume may have stale credentials."
+  warn "Removing all volumes to start fresh..."
+  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" down -v 2>/dev/null || true
+  success "Stale volumes removed."
+fi
+
+# ── 10. Pull images ───────────────────────────────────────────────────────────
 echo
 info "Pulling NuSaaS images from Docker Hub..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
 success "Images pulled."
 
-# ── 10. Start services ─────────────────────────────────────────────────────────
+# ── 11. Start services ─────────────────────────────────────────────────────────
 info "Starting services..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
 success "Services started."
 
-# ── 11. Wait for backend ──────────────────────────────────────────────────────
+# ── 12. Wait for backend ──────────────────────────────────────────────────────
 info "Waiting for backend to become healthy..."
 MAX_WAIT=120
 WAITED=0
@@ -547,7 +555,7 @@ done
 echo
 success "Backend is healthy."
 
-# ── 12. Run migrations and seeders ────────────────────────────────────────────
+# ── 13. Run migrations and seeders ────────────────────────────────────────────
 info "Running database migrations and seeding core configuration..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
   php artisan migrate --seed --force
@@ -562,7 +570,7 @@ ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
 
 success "Database ready."
 
-# ── 13. Done ──────────────────────────────────────────────────────────────────
+# ── 14. Done ──────────────────────────────────────────────────────────────────
 echo
 echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${GREEN}${BOLD}  NuSaaS is running!${RESET}"
