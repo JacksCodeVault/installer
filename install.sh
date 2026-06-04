@@ -55,7 +55,6 @@ fi
 
 NUSAAS_VERSION="${NUSAAS_VERSION:-latest}"
 COMPOSE_FILE="docker-compose.yml"
-COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/${COMPOSE_FILE}"
 ENV_EXAMPLE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/.env.selfhosted"
 
 prompt() {
@@ -169,17 +168,7 @@ info "Install directory: ${INSTALL_DIR}"
 mkdir -p "${INSTALL_DIR}" "${INSTALL_DIR}/web"
 cd "${INSTALL_DIR}"
 
-# ── 3. Download compose file ──────────────────────────────────────────────────
-if [[ ! -f "${COMPOSE_FILE}" ]]; then
-  info "Downloading ${COMPOSE_FILE}..."
-  curl -fsSL "${COMPOSE_URL}" -o "${COMPOSE_FILE}" \
-    || die "Failed to download ${COMPOSE_FILE}. Check your internet connection."
-  success "Downloaded ${COMPOSE_FILE}"
-else
-  warn "${COMPOSE_FILE} already exists — skipping download."
-fi
-
-# ── 4. Interactive configuration ──────────────────────────────────────────────
+# ── 3. Interactive configuration ──────────────────────────────────────────────
 echo
 echo -e "${BOLD}━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
@@ -208,6 +197,23 @@ case "${DB_TYPE_CHOICE:-1}" in
   3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
   *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
 esac
+
+# ── 4. Download compose file ──────────────────────────────────────────────────
+COMPOSE_FILE="docker-compose.yml"
+COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/${COMPOSE_FILE}"
+if [[ "${DB_CONNECTION}" == "pgsql" ]]; then
+  COMPOSE_FILE="docker-compose.pgsql.yml"
+  COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/docker-compose.pgsql.yml"
+fi
+if [[ ! -f "${COMPOSE_FILE}" ]]; then
+  info "Downloading ${COMPOSE_FILE}..."
+  curl -fsSL "${COMPOSE_URL}" -o "${COMPOSE_FILE}" \
+    || die "Failed to download ${COMPOSE_FILE}. Check your internet connection."
+  success "Downloaded ${COMPOSE_FILE}"
+else
+  warn "${COMPOSE_FILE} already exists — skipping download."
+fi
+
 echo
 prompt "DB host"     "127.0.0.1"         DB_HOST
 prompt "DB port"     "${DEFAULT_DB_PORT}" DB_PORT
