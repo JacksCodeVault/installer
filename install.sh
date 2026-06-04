@@ -33,6 +33,17 @@
 
 set -euo pipefail
 
+# ── Colours ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+info()    { echo -e "${CYAN}${BOLD}[NuSaaS]${RESET} $*"; }
+success() { echo -e "${GREEN}${BOLD}[  OK  ]${RESET} $*"; }
+warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
+error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
+die()     { error "$*"; exit 1; }
+
 # ── Detect interactive mode ──────────────────────────────────────────────────
 if [[ -t 0 ]]; then
   INTERACTIVE=true
@@ -42,21 +53,10 @@ else
   warn "Set environment variables to pre-configure values, or run 'bash install.sh' for interactive setup."
 fi
 
-# ── Colours ──────────────────────────────────────────────────────────────────
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
-
 NUSAAS_VERSION="${NUSAAS_VERSION:-latest}"
 COMPOSE_FILE="docker-compose.yml"
 COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/${COMPOSE_FILE}"
 ENV_EXAMPLE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/.env.selfhosted"
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-info()    { echo -e "${CYAN}${BOLD}[NuSaaS]${RESET} $*"; }
-success() { echo -e "${GREEN}${BOLD}[  OK  ]${RESET} $*"; }
-warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
-error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
-die()     { error "$*"; exit 1; }
 
 prompt() {
   local label="$1" default="${2:-}" var_name="$3"
