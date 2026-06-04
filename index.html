@@ -5,212 +5,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NUSAAS — Self-Host POS &amp; Business Management</title>
 <meta name="description" content="Deploy NUSAAS on your own infrastructure. One command installs the full stack on any Linux server.">
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500;1,700;1,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:oklch(0.12 0.006 270);
-  --surface:oklch(0.155 0.01 270);
-  --surface-hover:oklch(0.19 0.012 270);
-  --accent:oklch(0.56 0.21 262);
-  --accent-dim:oklch(0.45 0.18 262 / 0.15);
-  --text:oklch(0.94 0.004 270);
-  --text-secondary:oklch(0.58 0.012 270);
-  --border:oklch(0.21 0.012 270);
-  --code-bg:oklch(0.095 0.008 270);
-  --radius:8px;
-}
-html{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{min-height:100svh;display:flex;flex-direction:column}
-a{color:var(--accent);text-decoration:none;transition:opacity .25s}
-a:hover{opacity:.75}
-
-.container{max-width:960px;margin:0 auto;padding:0 28px}
-
-header{padding:28px 0}
-.logo{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:1.125rem;letter-spacing:-.01em;color:var(--text)}
-.logo span{color:var(--accent);font-style:italic}
-
-.hero{display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:clamp(48px,10vh,100px) 0 clamp(40px,6vh,64px);align-items:start}
-.hero-headline h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem,4.2vw,3.25rem);font-weight:700;line-height:1.2;letter-spacing:-.025em;margin-bottom:16px}
-.hero-headline h1 em{font-style:italic;color:var(--accent)}
-.hero-headline p{font-size:clamp(.875rem,1.15vw,.975rem);color:var(--text-secondary);line-height:1.75;max-width:420px}
-
-.command-block{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;position:relative}
-.command-block .bar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
-.command-block .bar .dots{display:flex;gap:5px}
-.command-block .bar .dots span{width:7px;height:7px;border-radius:50%}
-.command-block .bar .dots span:nth-child(1){background:oklch(0.53 0.14 24)}
-.command-block .bar .dots span:nth-child(2){background:oklch(0.58 0.14 84)}
-.command-block .bar .dots span:nth-child(3){background:oklch(0.48 0.12 144)}
-.command-block .bar-label{font-size:.625rem;font-weight:600;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-left:auto;opacity:.4}
-.command-block pre{padding:14px 16px;font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.8125rem;line-height:1.6;overflow-x:auto;white-space:pre;user-select:all;color:var(--text)}
-.command-block pre .prompt{color:var(--accent);user-select:none}
-.command-block pre .cmt{color:var(--text-secondary);opacity:.5}
-.command-block .copy-wrap{display:flex;justify-content:flex-end;padding:0 12px 12px}
-.command-block .copy-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-family:inherit;font-size:.6875rem;font-weight:600;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .2s}
-.command-block .copy-btn:hover{background:var(--surface-hover);color:var(--text)}
-.command-block .copy-btn.copied{color:oklch(0.58 0.16 146);border-color:oklch(0.58 0.16 146 / 0.3)}
-
-.hero-links{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
-.tag{font-size:.6875rem;font-weight:600;padding:6px 14px;border-radius:100px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);transition:all .2s;display:inline-flex;align-items:center;gap:5px}
-.tag:hover{border-color:var(--accent);color:var(--text)}
-.tag-outline{border-color:var(--accent-dim);color:var(--accent)}
-.tag-outline:hover{background:var(--accent-dim);border-color:var(--accent)}
-
-.files-section{padding:48px 0 64px;border-top:1px solid var(--border)}
-.files-section .label{font-size:.625rem;font-weight:600;color:var(--text-secondary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.5}
-.files-section h2{font-family:'Playfair Display',Georgia,serif;font-size:1.125rem;font-weight:700;margin-bottom:4px;letter-spacing:-.01em}
-.files-section .sub{font-size:.8125rem;color:var(--text-secondary);margin-bottom:28px}
-.file-row{display:grid;grid-template-columns:300px 1fr;align-items:center;gap:16px;padding:12px 16px;border-top:1px solid var(--border);transition:background .2s}
-.file-row:last-child{border-bottom:1px solid var(--border)}
-.file-row:hover{background:var(--surface)}
-.file-row .name{display:flex;align-items:center;gap:10px;min-width:0}
-.file-row .name .fm{font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.8125rem;font-weight:600;color:var(--text)}
-.file-row .name .size{font-size:.6875rem;color:var(--text-secondary);opacity:.6;white-space:nowrap}
-.file-row .desc{font-size:.75rem;color:var(--text-secondary);line-height:1.5;min-width:0}
-.file-row .actions{display:flex;align-items:center;gap:10px;justify-content:flex-end}
-.file-row .actions a{font-size:.6875rem;font-weight:600;white-space:nowrap}
-.file-row .actions .curl-copy{background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.625rem;color:var(--text-secondary);cursor:pointer;transition:all .2s;white-space:nowrap}
-.file-row .actions .curl-copy:hover{background:var(--surface-hover);color:var(--text)}
-.file-row .actions .curl-copy.copied{color:oklch(0.58 0.16 146);border-color:oklch(0.58 0.16 146 / 0.3)}
-
-footer{margin-top:auto;padding:20px 0 28px;border-top:1px solid var(--border)}
-footer .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-footer p{font-size:.6875rem;color:var(--text-secondary)}
-footer nav{display:flex;gap:18px}
-footer nav a{font-size:.6875rem;color:var(--text-secondary);font-weight:500}
-footer nav a:hover{color:var(--text)}
-
-@media(max-width:720px){
-  .hero{grid-template-columns:1fr;gap:32px}
-  .hero-headline p{max-width:none}
-  .file-row{grid-template-columns:1fr;gap:6px}
-  .file-row .actions{justify-content:flex-start}
-}
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  .font-display { font-family: 'Playfair Display', Georgia, serif; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="container">
-    <span class="logo">NUSA<span>AS</span></span>
+<header class="border-b border-neutral-200">
+  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+    <span class="font-display text-lg font-bold tracking-tight text-neutral-900">NUSA<span class="text-indigo-600 italic">AS</span></span>
+    <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="text-sm font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Docker Hub</a>
   </div>
 </header>
 
-<section class="hero">
-  <div class="hero-headline" style="padding-left:28px">
-    <h1>Deploy&nbsp;<em>NUSAAS</em><br>on your own servers.</h1>
-    <p>Open source POS, accounting, and inventory management. Your data, your infrastructure, no vendor lock-in.</p>
-    <div class="hero-links">
-      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="tag tag-outline">Docker Hub</a>
-      <a href="docker-compose.yml" download class="tag">Compose file</a>
-    </div>
-  </div>
-
-  <div>
-    <div class="command-block">
-      <div class="bar">
-        <div class="dots"><span></span><span></span><span></span></div>
-        <span class="bar-label">Terminal</span>
-      </div>
-      <pre><span class="prompt">$</span> curl -fsSL https://get.nusaas.com/install.sh<br><span class="prompt">$</span> bash install.sh</pre>
-      <div class="copy-wrap">
-        <button class="copy-btn" onclick="copyInstall(this)">Copy both lines</button>
-      </div>
-    </div>
-    <p style="font-size:.6875rem;color:var(--text-secondary);margin-top:12px;padding-left:4px;opacity:.7">Or run as a single pipeline:&thinsp;<code style="font-family:ui-monospace,monospace;font-size:.6875rem;color:var(--accent);background:var(--surface);padding:1px 5px;border-radius:3px;cursor:pointer;user-select:all" id="inline-cmd" onclick="copyInline(this)">curl -fsSL https://get.nusaas.com/install.sh | bash</code></p>
-  </div>
-</section>
-
-<section class="files-section">
-  <div class="container">
-    <p class="label">Assets</p>
-    <h2>Download the stack</h2>
-    <p class="sub">Grab individual files for manual setup or review before installing.</p>
-
-    <div class="file-row">
-      <div class="name">
-        <span class="fm">install.sh</span>
-        <span class="size">~12KB</span>
-      </div>
-      <div class="desc">Interactive installer with domain, database, and secret prompts.</div>
-      <div class="actions">
-        <button class="curl-copy" onclick="copyCurl(this, 'install.sh')">curl -O</button>
-        <a href="install.sh" download>Download</a>
-      </div>
+<main>
+  <section class="max-w-5xl mx-auto px-6 pt-20 pb-16">
+    <div class="max-w-2xl">
+      <h1 class="font-display text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 leading-[1.15]">
+        Self-host <span class="text-indigo-600 italic">NUSAAS</span><br>on your own servers.
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-neutral-500 leading-relaxed max-w-lg">
+        Open source POS, accounting, and inventory management. Your data, your infrastructure, no vendor lock-in.
+      </p>
     </div>
 
-    <div class="file-row">
-      <div class="name">
-        <span class="fm">docker-compose.yml</span>
-        <span class="size">~5KB</span>
+    <div class="mt-10 grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div class="lg:col-span-3">
+        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-3">Quick start</p>
+        <div class="bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-neutral-200 bg-white">
+            <span class="text-xs font-medium text-neutral-400">Install</span>
+          </div>
+          <div class="px-4 py-3.5 overflow-x-auto">
+            <pre class="text-sm font-mono text-neutral-800 leading-relaxed whitespace-pre select-all"><span class="text-indigo-500 select-none">$</span> curl -fsSL https://get.nusaas.com/install.sh -o install.sh
+<span class="text-indigo-500 select-none">$</span> bash install.sh</pre>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button onclick="copyCmd(this)" class="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors px-3 py-1.5 border border-indigo-200 rounded-md hover:bg-indigo-50">Copy both lines</button>
+          <span class="text-xs text-neutral-400">or</span>
+          <button onclick="copyInline(this)" class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">copy the one-liner</button>
+        </div>
+        <p class="mt-8 text-xs text-neutral-400 leading-relaxed">
+          The installer prompts for your domain, database credentials, mail settings, and secrets, then deploys the full stack.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">Docker Hub</a>
+          <a href="docker-compose.yml" download class="inline-flex items-center gap-1.5 px-4 py-2 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors">Download compose file</a>
+        </div>
       </div>
-      <div class="desc">Orchestrates backend, frontend, PostgreSQL, and Redis.</div>
-      <div class="actions">
-        <button class="curl-copy" onclick="copyCurl(this, 'docker-compose.yml')">curl -O</button>
-        <a href="docker-compose.yml" download>Download</a>
+
+      <div class="lg:col-span-2 lg:pt-0 pt-8">
+        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-4">In the stack</p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+            <div>
+              <p class="text-sm font-medium text-neutral-800">Backend API</p>
+              <p class="text-xs text-neutral-500 mt-0.5">PHP 8.2 with RESTful API, queue workers, scheduler</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+            <div>
+              <p class="text-sm font-medium text-neutral-800">Frontend</p>
+              <p class="text-xs text-neutral-500 mt-0.5">React SPA served via Nginx</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+            <div>
+              <p class="text-sm font-medium text-neutral-800">PostgreSQL + Redis</p>
+              <p class="text-xs text-neutral-500 mt-0.5">Relational database and in-memory cache</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="file-row">
-      <div class="name">
-        <span class="fm">.env.selfhosted</span>
-        <span class="size">~4KB</span>
+  <section class="border-t border-neutral-200">
+    <div class="max-w-5xl mx-auto px-6 py-16">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-2">How it works</p>
+        <h2 class="font-display text-2xl font-bold text-neutral-900 tracking-tight">Install in three steps</h2>
+        <p class="mt-1.5 text-sm text-neutral-500">The interactive installer guides you through configuration and deploys everything automatically.</p>
       </div>
-      <div class="desc">Environment variable template with all configuration keys.</div>
-      <div class="actions">
-        <button class="curl-copy" onclick="copyCurl(this, '.env.selfhosted')">curl -O</button>
-        <a href=".env.selfhosted" download>Download</a>
+      <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="border border-neutral-200 rounded-lg p-6">
+          <span class="text-3xl font-display font-bold text-indigo-600 italic">1</span>
+          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Download the installer</h3>
+          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">Fetch the install script to your server with a single curl command.</p>
+          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">curl -fsSL https://get.nusaas.com/install.sh -o install.sh</pre>
+        </div>
+        <div class="border border-neutral-200 rounded-lg p-6">
+          <span class="text-3xl font-display font-bold text-indigo-600 italic">2</span>
+          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Run the script</h3>
+          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">The installer prompts for your configuration and generates secure secrets.</p>
+          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">bash install.sh</pre>
+        </div>
+        <div class="border border-neutral-200 rounded-lg p-6">
+          <span class="text-3xl font-display font-bold text-indigo-600 italic">3</span>
+          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Access your instance</h3>
+          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">Once migrations finish, log in and start managing your business.</p>
+          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">https://app.yourdomain.com</pre>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer>
-  <div class="container">
-    <p>&copy; 2026 NUSAAS</p>
-    <nav>
-      <a href="https://hub.docker.com/u/ghostdev1" target="_blank">Docker Hub</a>
-      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank">Compose file</a>
+  <section class="border-t border-neutral-200">
+    <div class="max-w-5xl mx-auto px-6 py-16">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-2">Assets</p>
+        <h2 class="font-display text-2xl font-bold text-neutral-900 tracking-tight">Manual setup files</h2>
+        <p class="mt-1.5 text-sm text-neutral-500">Download individual files for manual configuration or review before installing.</p>
+      </div>
+      <div class="mt-8 divide-y divide-neutral-200 border-t border-b border-neutral-200">
+        <div class="flex items-center justify-between py-3.5 gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">install.sh</span>
+            <span class="text-xs text-neutral-400 shrink-0">~12 KB</span>
+            <span class="text-xs text-neutral-500 truncate">Interactive installer script</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <button onclick="copyCurl(this, 'install.sh')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
+            <a href="install.sh" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
+          </div>
+        </div>
+        <div class="flex items-center justify-between py-3.5 gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">docker-compose.yml</span>
+            <span class="text-xs text-neutral-400 shrink-0">~5 KB</span>
+            <span class="text-xs text-neutral-500 truncate">Orchestrates the four services</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
+            <a href="docker-compose.yml" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
+          </div>
+        </div>
+        <div class="flex items-center justify-between py-3.5 gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">.env.selfhosted</span>
+            <span class="text-xs text-neutral-400 shrink-0">~4 KB</span>
+            <span class="text-xs text-neutral-500 truncate">Environment variable template</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <button onclick="copyCurl(this, '.env.selfhosted')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
+            <a href=".env.selfhosted" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-neutral-200">
+  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+    <p class="text-xs text-neutral-400">&copy; 2026 NUSAAS</p>
+    <nav class="flex items-center gap-5">
+      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Docker Hub</a>
+      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Compose file</a>
     </nav>
   </div>
 </footer>
 
 <script>
-function origin() {
-  return window.location.origin;
-}
+function origin() { return window.location.origin; }
 
-function copyInstall(btn) {
-  const o = origin();
-  const text = 'curl -fsSL ' + o + '/install.sh\nbash install.sh';
+function copyCmd(btn) {
+  var o = origin();
+  var text = 'curl -fsSL ' + o + '/install.sh -o install.sh\nbash install.sh';
   navigator.clipboard.writeText(text).then(function() {
-    btn.textContent = 'Copied';
-    btn.classList.add('copied');
-    setTimeout(function() { btn.textContent = 'Copy both lines'; btn.classList.remove('copied'); }, 2000);
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
 
-function copyInline(el) {
-  const o = origin();
-  const text = 'curl -fsSL ' + o + '/install.sh | bash';
+function copyInline(btn) {
+  var o = origin();
+  var text = 'curl -fsSL ' + o + '/install.sh | bash';
   navigator.clipboard.writeText(text).then(function() {
-    var orig = el.textContent;
-    el.textContent = 'Copied!';
-    setTimeout(function() { el.textContent = orig; }, 2000);
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
 
 function copyCurl(btn, file) {
-  const o = origin();
-  const text = 'curl -fsSL ' + o + '/' + file + ' -o ' + file;
+  var o = origin();
+  var text = 'curl -fsSL ' + o + '/' + file + ' -o ' + file;
   navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
     btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(function() { btn.textContent = 'curl -O'; btn.classList.remove('copied'); }, 2000);
+    setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
 </script>
