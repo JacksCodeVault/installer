@@ -3,106 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NUSAAS - Self-Hosted POS & Business Management</title>
-<meta name="description" content="One-command installer for NUSAAS. Deploy your own open-source POS, accounting, and business management stack on any Linux server.">
+<title>NUSAAS — Self-Host POS &amp; Business Management</title>
+<meta name="description" content="Deploy NUSAAS on your own infrastructure. One command installs the full stack on any Linux server.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500;1,700;1,800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:oklch(0.13 0.008 270);
-  --surface:oklch(0.16 0.012 270);
-  --surface-hover:oklch(0.19 0.014 270);
-  --accent:oklch(0.55 0.22 265);
-  --accent-glow:oklch(0.65 0.18 265 / 0.15);
-  --text:oklch(0.93 0.005 270);
-  --text-secondary:oklch(0.6 0.015 270);
-  --border:oklch(0.22 0.015 270);
-  --code-bg:oklch(0.1 0.01 270);
-  --radius:10px;
+  --bg:oklch(0.12 0.006 270);
+  --surface:oklch(0.155 0.01 270);
+  --surface-hover:oklch(0.19 0.012 270);
+  --accent:oklch(0.56 0.21 262);
+  --accent-dim:oklch(0.45 0.18 262 / 0.15);
+  --text:oklch(0.94 0.004 270);
+  --text-secondary:oklch(0.58 0.012 270);
+  --border:oklch(0.21 0.012 270);
+  --code-bg:oklch(0.095 0.008 270);
+  --radius:8px;
 }
-html{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:smooth;font-size:16px;line-height:1.6}
-h1,h2,h3,.logo{font-family:'Playfair Display',Georgia,serif}
+html{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{min-height:100svh;display:flex;flex-direction:column}
-a{color:var(--accent);text-decoration:none;transition:opacity .2s}
-a:hover{opacity:.8}
-img{max-width:100%;display:block}
+a{color:var(--accent);text-decoration:none;transition:opacity .25s}
+a:hover{opacity:.75}
 
-.container{max-width:800px;margin:0 auto;padding:0 24px;width:100%}
+.container{max-width:960px;margin:0 auto;padding:0 28px}
 
-/* header */
-header{padding:32px 0 0}
-header .container{display:flex;align-items:center;justify-content:space-between}
-.logo{font-weight:800;font-size:1.25rem;letter-spacing:-.02em;color:var(--text)}
-.logo span{color:var(--accent)}
-.badge{font-size:.6875rem;font-weight:600;padding:4px 10px;border-radius:100px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);letter-spacing:.02em;text-transform:uppercase}
+header{padding:28px 0}
+.logo{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:1.125rem;letter-spacing:-.01em;color:var(--text)}
+.logo span{color:var(--accent);font-style:italic}
 
-/* hero */
-.hero{padding:clamp(64px,12vh,120px) 0 clamp(48px,8vh,80px);text-align:center}
-.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.15;letter-spacing:-.03em;margin-bottom:16px}
-.hero h1 span{background:linear-gradient(135deg,var(--accent),oklch(0.65 0.18 265));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic}
-.hero p{font-size:clamp(.9375rem,1.4vw,1.125rem);color:var(--text-secondary);max-width:560px;margin:0 auto 36px;line-height:1.7}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:48px;padding:clamp(48px,10vh,100px) 0 clamp(40px,6vh,64px);align-items:start}
+.hero-headline h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(2rem,4.2vw,3.25rem);font-weight:700;line-height:1.2;letter-spacing:-.025em;margin-bottom:16px}
+.hero-headline h1 em{font-style:italic;color:var(--accent)}
+.hero-headline p{font-size:clamp(.875rem,1.15vw,.975rem);color:var(--text-secondary);line-height:1.75;max-width:420px}
 
-/* command block */
-.command-block{max-width:640px;margin:0 auto;background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.command-block .bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
-.command-block .bar .dots{display:flex;gap:6px}
-.command-block .bar .dots span{width:8px;height:8px;border-radius:50%}
-.command-block .bar .dots span:nth-child(1){background:oklch(0.55 0.15 25)}
-.command-block .bar .dots span:nth-child(2){background:oklch(0.6 0.15 85)}
-.command-block .bar .dots span:nth-child(3){background:oklch(0.5 0.13 145)}
-.command-block .bar .label{font-size:.6875rem;color:var(--text-secondary);font-weight:500;margin-left:auto;letter-spacing:.02em;text-transform:uppercase;opacity:.5}
-.command-block code{display:block;padding:16px 20px;font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono',monospace;font-size:.8125rem;color:var(--text);line-height:1.5;overflow-x:auto;white-space:pre;user-select:all;position:relative}
-.command-block code .prompt{color:var(--accent)}
-.command-block .copy-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;margin:0 12px 12px auto;font-family:inherit;font-size:.75rem;font-weight:600;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s}
+.command-block{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;position:relative}
+.command-block .bar{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
+.command-block .bar .dots{display:flex;gap:5px}
+.command-block .bar .dots span{width:7px;height:7px;border-radius:50%}
+.command-block .bar .dots span:nth-child(1){background:oklch(0.53 0.14 24)}
+.command-block .bar .dots span:nth-child(2){background:oklch(0.58 0.14 84)}
+.command-block .bar .dots span:nth-child(3){background:oklch(0.48 0.12 144)}
+.command-block .bar-label{font-size:.625rem;font-weight:600;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-left:auto;opacity:.4}
+.command-block pre{padding:14px 16px;font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.8125rem;line-height:1.6;overflow-x:auto;white-space:pre;user-select:all;color:var(--text)}
+.command-block pre .prompt{color:var(--accent);user-select:none}
+.command-block pre .cmt{color:var(--text-secondary);opacity:.5}
+.command-block .copy-wrap{display:flex;justify-content:flex-end;padding:0 12px 12px}
+.command-block .copy-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-family:inherit;font-size:.6875rem;font-weight:600;color:var(--text-secondary);background:var(--surface);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .2s}
 .command-block .copy-btn:hover{background:var(--surface-hover);color:var(--text)}
-.command-block .copy-btn.copied{color:oklch(0.6 0.18 145);border-color:oklch(0.6 0.18 145 / 0.3)}
+.command-block .copy-btn.copied{color:oklch(0.58 0.16 146);border-color:oklch(0.58 0.16 146 / 0.3)}
 
-/* actions row */
-.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;font-family:inherit;font-size:.875rem;font-weight:600;cursor:pointer;transition:all .2s;border:none;text-decoration:none}
-.btn-primary{background:var(--accent);color:var(--bg)}
-.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
-.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
-.btn-secondary:hover{background:var(--surface-hover);border-color:var(--accent)}
+.hero-links{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+.tag{font-size:.6875rem;font-weight:600;padding:6px 14px;border-radius:100px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.tag:hover{border-color:var(--accent);color:var(--text)}
+.tag-outline{border-color:var(--accent-dim);color:var(--accent)}
+.tag-outline:hover{background:var(--accent-dim);border-color:var(--accent)}
 
-/* features */
-.features{padding:64px 0;border-top:1px solid var(--border)}
-.features h2{font-size:1.25rem;font-weight:700;margin-bottom:32px;text-align:center;color:var(--text-secondary)}
-.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:border-color .2s}
-.feature-card:hover{border-color:var(--accent)}
-.feature-card .icon{width:36px;height:36px;border-radius:8px;background:oklch(0.55 0.22 265 / 0.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:1.1rem}
-.feature-card h3{font-size:.9375rem;font-weight:700;margin-bottom:6px}
-.feature-card p{font-size:.8125rem;color:var(--text-secondary);line-height:1.6}
-.feature-card a{font-size:.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-top:12px}
+.files-section{padding:48px 0 64px;border-top:1px solid var(--border)}
+.files-section .label{font-size:.625rem;font-weight:600;color:var(--text-secondary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;opacity:.5}
+.files-section h2{font-family:'Playfair Display',Georgia,serif;font-size:1.125rem;font-weight:700;margin-bottom:4px;letter-spacing:-.01em}
+.files-section .sub{font-size:.8125rem;color:var(--text-secondary);margin-bottom:28px}
+.file-row{display:grid;grid-template-columns:300px 1fr;align-items:center;gap:16px;padding:12px 16px;border-top:1px solid var(--border);transition:background .2s}
+.file-row:last-child{border-bottom:1px solid var(--border)}
+.file-row:hover{background:var(--surface)}
+.file-row .name{display:flex;align-items:center;gap:10px;min-width:0}
+.file-row .name .fm{font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.8125rem;font-weight:600;color:var(--text)}
+.file-row .name .size{font-size:.6875rem;color:var(--text-secondary);opacity:.6;white-space:nowrap}
+.file-row .desc{font-size:.75rem;color:var(--text-secondary);line-height:1.5;min-width:0}
+.file-row .actions{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.file-row .actions a{font-size:.6875rem;font-weight:600;white-space:nowrap}
+.file-row .actions .curl-copy{background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-family:ui-monospace,'SFMono-Regular','Cascadia Code','JetBrains Mono','Fira Code',monospace;font-size:.625rem;color:var(--text-secondary);cursor:pointer;transition:all .2s;white-space:nowrap}
+.file-row .actions .curl-copy:hover{background:var(--surface-hover);color:var(--text)}
+.file-row .actions .curl-copy.copied{color:oklch(0.58 0.16 146);border-color:oklch(0.58 0.16 146 / 0.3)}
 
-/* manual */
-.manual{padding:48px 0 80px;border-top:1px solid var(--border)}
-.manual h2{font-size:1rem;font-weight:700;margin-bottom:8px}
-.manual > p{font-size:.875rem;color:var(--text-secondary);margin-bottom:28px}
-.file-list{display:flex;flex-direction:column;gap:10px}
-.file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:border-color .2s}
-.file-item:hover{border-color:var(--accent)}
-.file-info{display:flex;align-items:center;gap:10px;min-width:0}
-.file-info .file-icon{font-size:1rem;flex-shrink:0}
-.file-info .name{font-size:.875rem;font-weight:600;white-space:nowrap}
-.file-info .desc{font-size:.75rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.file-item a{font-size:.75rem;font-weight:600;flex-shrink:0}
-
-/* footer */
-footer{padding:24px 0 32px;border-top:1px solid var(--border);margin-top:auto}
+footer{margin-top:auto;padding:20px 0 28px;border-top:1px solid var(--border)}
 footer .container{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-footer p{font-size:.75rem;color:var(--text-secondary)}
-footer nav{display:flex;gap:20px}
-footer nav a{font-size:.75rem;color:var(--text-secondary);font-weight:500}
+footer p{font-size:.6875rem;color:var(--text-secondary)}
+footer nav{display:flex;gap:18px}
+footer nav a{font-size:.6875rem;color:var(--text-secondary);font-weight:500}
 footer nav a:hover{color:var(--text)}
 
-@media(max-width:600px){
-  .file-item{flex-wrap:wrap}
-  .file-item a{margin-left:auto}
-  .command-block code{font-size:.75rem;padding:12px 14px}
+@media(max-width:720px){
+  .hero{grid-template-columns:1fr;gap:32px}
+  .hero-headline p{max-width:none}
+  .file-row{grid-template-columns:1fr;gap:6px}
+  .file-row .actions{justify-content:flex-start}
 }
 </style>
 </head>
@@ -111,85 +97,73 @@ footer nav a:hover{color:var(--text)}
 <header>
   <div class="container">
     <span class="logo">NUSA<span>AS</span></span>
-    <span class="badge">v1.0.1</span>
   </div>
 </header>
 
 <section class="hero">
-  <div class="container">
-    <h1>Ship <span>NUSAAS</span> on your own infrastructure.</h1>
-    <p>Open source POS, accounting &amp; inventory management. One command deploys the full stack on any Linux server. Your data, your servers, no vendor lock-in.</p>
+  <div class="hero-headline" style="padding-left:28px">
+    <h1>Deploy&nbsp;<em>NUSAAS</em><br>on your own servers.</h1>
+    <p>Open source POS, accounting, and inventory management. Your data, your infrastructure, no vendor lock-in.</p>
+    <div class="hero-links">
+      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="tag tag-outline">Docker Hub</a>
+      <a href="docker-compose.yml" download class="tag">Compose file</a>
+    </div>
+  </div>
 
+  <div>
     <div class="command-block">
       <div class="bar">
         <div class="dots"><span></span><span></span><span></span></div>
-        <span class="label">Terminal</span>
+        <span class="bar-label">Terminal</span>
       </div>
-      <code><span class="prompt">$</span> curl -fsSL https://get.nusaas.com/install.sh | bash</code>
-      <button class="copy-btn" onclick="copyCmd(this)">Copy command</button>
+      <pre><span class="prompt">$</span> curl -fsSL https://get.nusaas.com/install.sh<br><span class="prompt">$</span> bash install.sh</pre>
+      <div class="copy-wrap">
+        <button class="copy-btn" onclick="copyInstall(this)">Copy both lines</button>
+      </div>
     </div>
-
-    <div class="actions">
-      <a class="btn btn-primary" href="https://hub.docker.com/u/ghostdev1" target="_blank">Docker Hub</a>
-      <a class="btn btn-secondary" href="docker-compose.yml" download>Download compose file</a>
-    </div>
+    <p style="font-size:.6875rem;color:var(--text-secondary);margin-top:12px;padding-left:4px;opacity:.7">Or run as a single pipeline:&thinsp;<code style="font-family:ui-monospace,monospace;font-size:.6875rem;color:var(--accent);background:var(--surface);padding:1px 5px;border-radius:3px;cursor:pointer;user-select:all" id="inline-cmd" onclick="copyInline(this)">curl -fsSL https://get.nusaas.com/install.sh | bash</code></p>
   </div>
 </section>
 
-<section class="features">
+<section class="files-section">
   <div class="container">
-    <h2>The stack, containerized</h2>
-    <div class="feature-grid">
-      <div class="feature-card">
-        <div class="icon">&#9881;</div>
-        <h3>Backend API</h3>
-        <p>PHP 8.2 application with RESTful API, queue workers, and scheduled tasks.</p>
-        <a href="https://hub.docker.com/r/ghostdev1/nusaas-backend" target="_blank">Docker image &rarr;</a>
+    <p class="label">Assets</p>
+    <h2>Download the stack</h2>
+    <p class="sub">Grab individual files for manual setup or review before installing.</p>
+
+    <div class="file-row">
+      <div class="name">
+        <span class="fm">install.sh</span>
+        <span class="size">~12KB</span>
       </div>
-      <div class="feature-card">
-        <div class="icon">&#9733;</div>
-        <h3>Frontend</h3>
-        <p>React SPA served via Nginx. Connects to your API domain over HTTPS.</p>
-        <a href="https://hub.docker.com/r/ghostdev1/nusaas-frontend" target="_blank">Docker image &rarr;</a>
-      </div>
-      <div class="feature-card">
-        <div class="icon">&#8635;</div>
-        <h3>PostgreSQL + Redis</h3>
-        <p>Relational database and in-memory cache. Pre-configured for production.</p>
-        <a href="https://www.postgresql.org/" target="_blank">PostgreSQL &rarr;</a>
+      <div class="desc">Interactive installer with domain, database, and secret prompts.</div>
+      <div class="actions">
+        <button class="curl-copy" onclick="copyCurl(this, 'install.sh')">curl -O</button>
+        <a href="install.sh" download>Download</a>
       </div>
     </div>
-  </div>
-</section>
 
-<section class="manual">
-  <div class="container">
-    <h2>Manual setup files</h2>
-    <p>Prefer to configure everything by hand? Download the individual files.</p>
-    <div class="file-list">
-      <div class="file-item">
-        <div class="file-info">
-          <span class="file-icon">&#9881;</span>
-          <span class="name">docker-compose.yml</span>
-          <span class="desc">&mdash; Orchestrates the four services</span>
-        </div>
+    <div class="file-row">
+      <div class="name">
+        <span class="fm">docker-compose.yml</span>
+        <span class="size">~5KB</span>
+      </div>
+      <div class="desc">Orchestrates backend, frontend, PostgreSQL, and Redis.</div>
+      <div class="actions">
+        <button class="curl-copy" onclick="copyCurl(this, 'docker-compose.yml')">curl -O</button>
         <a href="docker-compose.yml" download>Download</a>
       </div>
-      <div class="file-item">
-        <div class="file-info">
-          <span class="file-icon">&#9998;</span>
-          <span class="name">.env.selfhosted</span>
-          <span class="desc">&mdash; Environment variable template</span>
-        </div>
-        <a href=".env.selfhosted" download>Download</a>
+    </div>
+
+    <div class="file-row">
+      <div class="name">
+        <span class="fm">.env.selfhosted</span>
+        <span class="size">~4KB</span>
       </div>
-      <div class="file-item">
-        <div class="file-info">
-          <span class="file-icon">&#9654;</span>
-          <span class="name">install.sh</span>
-          <span class="desc">&mdash; Interactive installer script</span>
-        </div>
-        <a href="install.sh" download>Download</a>
+      <div class="desc">Environment variable template with all configuration keys.</div>
+      <div class="actions">
+        <button class="curl-copy" onclick="copyCurl(this, '.env.selfhosted')">curl -O</button>
+        <a href=".env.selfhosted" download>Download</a>
       </div>
     </div>
   </div>
@@ -200,21 +174,43 @@ footer nav a:hover{color:var(--text)}
     <p>&copy; 2026 NUSAAS</p>
     <nav>
       <a href="https://hub.docker.com/u/ghostdev1" target="_blank">Docker Hub</a>
-      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank">Compose File</a>
+      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank">Compose file</a>
     </nav>
   </div>
 </footer>
 
 <script>
-function copyCmd(btn) {
-  const text = 'curl -fsSL https://get.nusaas.com/install.sh | bash';
-  navigator.clipboard.writeText(text).then(() => {
+function origin() {
+  return window.location.origin;
+}
+
+function copyInstall(btn) {
+  const o = origin();
+  const text = 'curl -fsSL ' + o + '/install.sh\nbash install.sh';
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy both lines'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyInline(el) {
+  const o = origin();
+  const text = 'curl -fsSL ' + o + '/install.sh | bash';
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = el.textContent;
+    el.textContent = 'Copied!';
+    setTimeout(function() { el.textContent = orig; }, 2000);
+  });
+}
+
+function copyCurl(btn, file) {
+  const o = origin();
+  const text = 'curl -fsSL ' + o + '/' + file + ' -o ' + file;
+  navigator.clipboard.writeText(text).then(function() {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'Copy command';
-      btn.classList.remove('copied');
-    }, 2000);
+    setTimeout(function() { btn.textContent = 'curl -O'; btn.classList.remove('copied'); }, 2000);
   });
 }
 </script>
