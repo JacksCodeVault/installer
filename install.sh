@@ -41,7 +41,7 @@ BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 info()    { echo -e "${CYAN}${BOLD}[NuSaaS]${RESET} $*"; }
 success() { echo -e "${GREEN}${BOLD}[  OK  ]${RESET} $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
-error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
+error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*"; echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
 die()     { error "$*"; exit 1; }
 
 # ── Detect interactive mode ──────────────────────────────────────────────────
@@ -139,24 +139,29 @@ echo
 # ── 1. System requirements ────────────────────────────────────────────────────
 info "Checking system requirements..."
 
-command -v docker &>/dev/null    || die "Docker is not installed. Visit https://docs.docker.com/get-docker/"
-command -v openssl &>/dev/null   || die "openssl is required but not found."
+info "  docker ..."
+command -v docker >/dev/null 2>&1 || die "Docker is not installed. Visit https://docs.docker.com/get-docker/"
 
+info "  openssl ..."
+command -v openssl >/dev/null 2>&1 || die "openssl is required but not found."
+
+info "  docker compose ..."
 # Docker Compose v2 (plugin) or v1 (standalone)
-if docker compose version &>/dev/null 2>&1; then
+if docker compose version >/dev/null 2>&1; then
   COMPOSE_CMD="docker compose"
-elif command -v docker-compose &>/dev/null; then
+elif command -v docker-compose >/dev/null 2>&1; then
   COMPOSE_CMD="docker-compose"
 else
   die "Docker Compose is not installed. Visit https://docs.docker.com/compose/install/"
 fi
 
-DOCKER_VERSION=$(docker --version | awk '{print $3}' | tr -d ',')
+DOCKER_VERSION=$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',')
 success "Docker ${DOCKER_VERSION} detected"
 success "Docker Compose detected (${COMPOSE_CMD})"
 
 # Ensure Docker daemon is running
-docker info &>/dev/null || die "Docker daemon is not running. Start Docker and try again."
+info "  docker daemon ..."
+docker info >/dev/null 2>&1 || die "Docker daemon is not running. Start Docker and try again."
 
 # ── 2. Working directory ──────────────────────────────────────────────────────
 INSTALL_DIR="${INSTALL_DIR:-$(pwd)/nusaas}"
