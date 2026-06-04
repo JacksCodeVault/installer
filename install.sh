@@ -41,7 +41,7 @@ BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 info()    { echo -e "${CYAN}${BOLD}[NuSaaS]${RESET} $*"; }
 success() { echo -e "${GREEN}${BOLD}[  OK  ]${RESET} $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
-error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*"; echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
+error()   { echo "[ERROR] $*"; echo "[ERROR] $*" >&2; }
 die()     { error "$*"; exit 1; }
 
 # ── Detect interactive mode ──────────────────────────────────────────────────
@@ -149,13 +149,13 @@ info "  docker compose ..."
 # Docker Compose v2 (plugin) or v1 (standalone)
 if docker compose version >/dev/null 2>&1; then
   COMPOSE_CMD="docker compose"
-elif command -v docker-compose >/dev/null 2>&1; then
+elif docker-compose --version >/dev/null 2>&1; then
   COMPOSE_CMD="docker-compose"
 else
-  die "Docker Compose is not installed. Visit https://docs.docker.com/compose/install/"
+  die "Docker Compose is not installed. Install it from https://docs.docker.com/compose/install/"
 fi
 
-DOCKER_VERSION=$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',')
+DOCKER_VERSION=$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',') || true
 success "Docker ${DOCKER_VERSION} detected"
 success "Docker Compose detected (${COMPOSE_CMD})"
 
