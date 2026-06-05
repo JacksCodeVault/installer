@@ -564,9 +564,13 @@ info "Warming search index..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
   php artisan scout:sync-index-settings || true
 
-info "Caching config, routes, and views for production..."
+info "Caching config, routes, and events for production..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan optimize
+  php artisan config:cache 2>/dev/null
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+  php artisan route:cache
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+  php artisan event:cache
 
 success "Database ready."
 
