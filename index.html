@@ -8,80 +8,177 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#ff5500',
+          'neutral-bg': '#0a0a0c',
+          'neutral-surface': '#121215',
+          'neutral-border': '#242429',
+          'neutral-text': '#fafafa',
+          'neutral-muted': '#8a8a93',
+          'accent-glow': '#ff7733',
+        },
+        fontFamily: {
+          display: ['Fira Code', 'JetBrains Mono', 'monospace'],
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['Fira Code', 'JetBrains Mono', 'monospace'],
+        },
+        borderRadius: {
+          sm: '4px',
+          md: '6px',
+        }
+      }
+    }
+  }
+</script>
 <style>
-  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-  .font-display { font-family: 'Playfair Display', Georgia, serif; }
+  body {
+    background-color: #0a0a0c;
+    color: #fafafa;
+  }
+  /* Custom scrollbar to match terminal theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0c;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #121215;
+    border: 1px solid #242429;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #242429;
+  }
+  /* Blinking terminal cursor animation */
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .terminal-cursor {
+    animation: blink 1s step-end infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-cursor {
+      display: none !important;
+    }
+  }
 </style>
 </head>
-<body>
+<body class="font-sans antialiased bg-neutral-bg text-neutral-text">
 
-<header class="border-b border-neutral-200">
+<header class="border-b border-neutral-border bg-neutral-bg select-none">
   <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-    <span class="font-display text-lg font-bold tracking-tight text-neutral-900">NUSA<span class="text-indigo-600 italic">AS</span></span>
-    <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="text-sm font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Docker Hub</a>
+    <span class="font-display text-sm font-semibold tracking-tight text-neutral-text">
+      <span class="text-primary font-bold">nusaas</span>@self-host:<span class="text-accent-glow">~</span>$
+    </span>
+    <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors">
+      [docker-hub]
+    </a>
   </div>
 </header>
 
-<main>
-  <section class="max-w-5xl mx-auto px-6 pt-20 pb-16">
+<main class="max-w-5xl mx-auto px-6 pt-16 pb-16">
+  <!-- Hero Section -->
+  <section class="mb-16">
     <div class="max-w-2xl">
-      <h1 class="font-display text-4xl sm:text-5xl font-bold tracking-tight text-neutral-900 leading-[1.15]">
-        Self-host <span class="text-indigo-600 italic">NUSAAS</span><br>on your own servers.
+      <div class="font-mono text-xs text-primary mb-2 select-none">&gt; cat purpose.txt</div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-neutral-text leading-tight">
+        Self-host <span class="text-primary italic">NUSAAS</span> on your own infrastructure.
       </h1>
-      <p class="mt-4 text-base sm:text-lg text-neutral-500 leading-relaxed max-w-lg">
-        Open source POS, accounting, and inventory management. Your data, your infrastructure, no vendor lock-in.
+      <p class="mt-3 text-sm sm:text-base text-neutral-muted leading-relaxed max-w-lg">
+        Open source POS, accounting, and inventory management. Total data sovereignty, no vendor lock-in.
       </p>
     </div>
 
+    <!-- Quickstart and In the Stack Grid -->
     <div class="mt-10 grid grid-cols-1 lg:grid-cols-5 gap-8">
-      <div class="lg:col-span-3">
-        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-3">Quick start</p>
-        <div class="bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden">
-          <div class="px-4 py-2.5 border-b border-neutral-200 bg-white">
-            <span class="text-xs font-medium text-neutral-400">Install</span>
+      <!-- Quickstart Command Box -->
+      <div class="lg:col-span-3 flex flex-col justify-between">
+        <div>
+          <p class="font-mono text-xs text-neutral-muted uppercase mb-3 tracking-wider select-none">// QUICK_START</p>
+          
+          <!-- Mock Terminal Window -->
+          <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden shadow-2xl">
+            <!-- Terminal Header -->
+            <div class="px-4 py-2.5 border-b border-neutral-border bg-neutral-surface/60 flex items-center justify-between select-none">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="font-mono text-[10px] text-neutral-muted">installer.sh</span>
+              <div class="w-10"></div>
+            </div>
+            <!-- Terminal Content -->
+            <div id="terminal-screen" class="p-4 overflow-x-auto font-mono text-xs sm:text-sm text-neutral-text leading-relaxed bg-[#08080a] min-h-[80px] flex flex-col justify-start">
+              <div class="flex items-start gap-1">
+                <span class="text-primary select-none shrink-0">$</span>
+                <span id="line1" class="whitespace-pre"></span>
+              </div>
+              <div id="line2-container" class="flex items-start gap-1 hidden">
+                <span class="text-primary select-none shrink-0">$</span>
+                <span id="line2" class="whitespace-pre"></span>
+              </div>
+            </div>
           </div>
-          <div class="px-4 py-3.5 overflow-x-auto">
-            <pre class="text-sm font-mono text-neutral-800 leading-relaxed whitespace-pre select-all"><span class="text-indigo-500 select-none">$</span> curl -fsSL https://get.nusaas.com/install.sh -o install.sh
-<span class="text-indigo-500 select-none">$</span> bash install.sh</pre>
+          
+          <!-- Quick actions -->
+          <div class="mt-3 flex items-center gap-4">
+            <button onclick="copyCmd(this)" class="font-mono text-xs font-medium text-primary hover:text-accent-glow transition-colors px-3 py-1.5 border border-primary/30 rounded bg-primary/5 hover:bg-primary/10">
+              [Copy both lines]
+            </button>
+            <span class="font-mono text-xs text-neutral-border select-none">|</span>
+            <button onclick="copyInline(this)" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors">
+              copy the one-liner
+            </button>
           </div>
         </div>
-        <div class="mt-3 flex items-center gap-2">
-          <button onclick="copyCmd(this)" class="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors px-3 py-1.5 border border-indigo-200 rounded-md hover:bg-indigo-50">Copy both lines</button>
-          <span class="text-xs text-neutral-400">or</span>
-          <button onclick="copyInline(this)" class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">copy the one-liner</button>
-        </div>
-        <p class="mt-8 text-xs text-neutral-400 leading-relaxed">
-          The installer prompts for your domain, database credentials, mail settings, and secrets, then deploys the full stack.
-        </p>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">Docker Hub</a>
-          <a href="docker-compose.yml" download class="inline-flex items-center gap-1.5 px-4 py-2 border border-neutral-300 text-neutral-700 text-sm font-medium rounded-lg hover:bg-neutral-50 transition-colors">Download compose file</a>
+
+        <div class="mt-8">
+          <p class="text-xs text-neutral-muted leading-relaxed font-mono select-none">
+            // The interactive installer configures environment, databases, mail services, and spins up the stack.
+          </p>
+          <div class="mt-4 flex flex-wrap gap-3">
+            <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs px-3 py-2 bg-primary text-neutral-bg rounded hover:bg-accent-glow transition-colors font-medium">
+              Docker Hub
+            </a>
+            <a href="docker-compose.yml" download class="font-mono text-xs px-3 py-2 border border-neutral-border text-neutral-text rounded hover:bg-neutral-surface transition-colors font-medium">
+              Download Compose File
+            </a>
+          </div>
         </div>
       </div>
 
-      <div class="lg:col-span-2 lg:pt-0 pt-8">
-        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-4">In the stack</p>
-        <div class="space-y-3">
-          <div class="flex items-start gap-3">
-            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+      <!-- In the Stack Box -->
+      <div class="lg:col-span-2 flex flex-col justify-start">
+        <p class="font-mono text-xs text-neutral-muted uppercase mb-4 tracking-wider select-none">// THE_STACK</p>
+        <div class="bg-neutral-surface border border-neutral-border rounded-md p-5 space-y-4">
+          <div class="flex gap-3">
+            <span class="font-mono text-primary select-none">01.</span>
             <div>
-              <p class="text-sm font-medium text-neutral-800">Backend API</p>
-              <p class="text-xs text-neutral-500 mt-0.5">PHP 8.2 with RESTful API, queue workers, scheduler</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">Backend API</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">PHP 8.2 with RESTful API, task queues, and integrated scheduler.</p>
             </div>
           </div>
-          <div class="flex items-start gap-3">
-            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+          <div class="flex gap-3">
+            <span class="font-mono text-primary select-none">02.</span>
             <div>
-              <p class="text-sm font-medium text-neutral-800">Frontend</p>
-              <p class="text-xs text-neutral-500 mt-0.5">React SPA served via Nginx</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">Frontend Web</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">React SPA served efficiently via Nginx containerization.</p>
             </div>
           </div>
-          <div class="flex items-start gap-3">
-            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+          <div class="flex gap-3">
+            <span class="font-mono text-primary select-none">03.</span>
             <div>
-              <p class="text-sm font-medium text-neutral-800">PostgreSQL + Redis</p>
-              <p class="text-xs text-neutral-500 mt-0.5">Relational database and in-memory cache</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">PostgreSQL &amp; Redis</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">Reliable relational database paired with in-memory cache layer.</p>
             </div>
           </div>
         </div>
@@ -89,75 +186,119 @@
     </div>
   </section>
 
-  <section class="border-t border-neutral-200">
-    <div class="max-w-5xl mx-auto px-6 py-16">
-      <div class="max-w-2xl">
-        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-2">How it works</p>
-        <h2 class="font-display text-2xl font-bold text-neutral-900 tracking-tight">Install in three steps</h2>
-        <p class="mt-1.5 text-sm text-neutral-500">The interactive installer guides you through configuration and deploys everything automatically.</p>
+  <!-- Step Section -->
+  <section class="border-t border-neutral-border pt-16 mb-16 select-none">
+    <div class="max-w-2xl mb-8">
+      <p class="font-mono text-xs text-primary mb-2">&gt; ls -l guides/</p>
+      <h2 class="font-display text-2xl font-bold text-neutral-text tracking-tight">Installation Walkthrough</h2>
+      <p class="mt-1 text-sm text-neutral-muted">Watch the interactive installer wizard execute in real time.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <!-- Steps List (Left) -->
+      <div class="lg:col-span-2 space-y-4 flex flex-col justify-between">
+        <div class="border border-neutral-border bg-neutral-surface rounded-md p-4 flex gap-4">
+          <span class="font-mono text-xs text-primary shrink-0">[01]</span>
+          <div>
+            <h3 class="text-xs font-semibold text-neutral-text font-mono">Fetch Script</h3>
+            <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Download the secure installer script directly into your server directory.</p>
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+              curl -fsSL https://get.nusaas.com/install.sh -o install.sh
+            </div>
+          </div>
+        </div>
+        <div class="border border-neutral-border bg-neutral-surface rounded-md p-4 flex gap-4">
+          <span class="font-mono text-xs text-primary shrink-0">[02]</span>
+          <div>
+            <h3 class="text-xs font-semibold text-neutral-text font-mono">Execute Wizard</h3>
+            <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Run the installer to configure databases, mail services, and cryptographic secrets.</p>
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+              bash install.sh
+            </div>
+          </div>
+        </div>
+        <div class="border border-neutral-border bg-neutral-surface rounded-md p-4 flex gap-4">
+          <span class="font-mono text-xs text-primary shrink-0">[03]</span>
+          <div>
+            <h3 class="text-xs font-semibold text-neutral-text font-mono">Launch Console</h3>
+            <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Log in to your private POS &amp; ERP management portal once docker containers spin up.</p>
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+              https://app.yourdomain.com
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="border border-neutral-200 rounded-lg p-6">
-          <span class="text-3xl font-display font-bold text-indigo-600 italic">1</span>
-          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Download the installer</h3>
-          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">Fetch the install script to your server with a single curl command.</p>
-          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">curl -fsSL https://get.nusaas.com/install.sh -o install.sh</pre>
-        </div>
-        <div class="border border-neutral-200 rounded-lg p-6">
-          <span class="text-3xl font-display font-bold text-indigo-600 italic">2</span>
-          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Run the script</h3>
-          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">The installer prompts for your configuration and generates secure secrets.</p>
-          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">bash install.sh</pre>
-        </div>
-        <div class="border border-neutral-200 rounded-lg p-6">
-          <span class="text-3xl font-display font-bold text-indigo-600 italic">3</span>
-          <h3 class="mt-3 text-sm font-semibold text-neutral-900">Access your instance</h3>
-          <p class="mt-1.5 text-xs text-neutral-500 leading-relaxed">Once migrations finish, log in and start managing your business.</p>
-          <pre class="mt-3 text-[11px] font-mono text-neutral-700 bg-neutral-50 border border-neutral-200 rounded px-3 py-2 overflow-x-auto select-all">https://app.yourdomain.com</pre>
+      
+      <!-- Interactive Terminal Demo (Right) -->
+      <div class="lg:col-span-3 flex flex-col">
+        <p class="font-mono text-xs text-neutral-muted uppercase mb-3 tracking-wider">// SIMULATED_INSTALL</p>
+        <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden shadow-2xl flex-1 flex flex-col min-h-[350px]">
+          <!-- Terminal Header -->
+          <div class="px-4 py-2 border-b border-neutral-border bg-neutral-surface/60 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+            </div>
+            <span class="font-mono text-[10px] text-neutral-muted">interactive-demo.sh</span>
+            <div class="w-10"></div>
+          </div>
+          <!-- Terminal Screen -->
+          <div id="demo-terminal-screen" class="p-4 font-mono text-[11px] text-neutral-text leading-relaxed bg-[#08080a] overflow-y-auto h-[350px] flex-1 select-text">
+            <!-- Simulated installer log lines append here -->
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="border-t border-neutral-200">
-    <div class="max-w-5xl mx-auto px-6 py-16">
-      <div class="max-w-2xl">
-        <p class="text-xs font-semibold tracking-widest text-neutral-400 uppercase mb-2">Assets</p>
-        <h2 class="font-display text-2xl font-bold text-neutral-900 tracking-tight">Manual setup files</h2>
-        <p class="mt-1.5 text-sm text-neutral-500">Download individual files for manual configuration or review before installing.</p>
+  <!-- Asset Table Section -->
+  <section class="border-t border-neutral-border pt-16">
+    <div class="max-w-2xl mb-8">
+      <p class="font-mono text-xs text-primary mb-2 select-none">&gt; ls -lh config/</p>
+      <h2 class="font-display text-2xl font-bold text-neutral-text tracking-tight">Manual Deployment Assets</h2>
+      <p class="mt-1 text-sm text-neutral-muted">Review, configure, or manually download individual infrastructure files.</p>
+    </div>
+    
+    <!-- ls -lh styled files table -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md overflow-hidden font-mono text-xs shadow-xl">
+      <!-- Table Header -->
+      <div class="grid grid-cols-12 gap-2 px-4 py-2.5 bg-neutral-surface/60 border-b border-neutral-border text-neutral-muted select-none">
+        <div class="col-span-3">PERMISSIONS</div>
+        <div class="col-span-2">SIZE</div>
+        <div class="col-span-4">FILENAME</div>
+        <div class="col-span-3 text-right">ACTIONS</div>
       </div>
-      <div class="mt-8 divide-y divide-neutral-200 border-t border-b border-neutral-200">
-        <div class="flex items-center justify-between py-3.5 gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">install.sh</span>
-            <span class="text-xs text-neutral-400 shrink-0">~12 KB</span>
-            <span class="text-xs text-neutral-500 truncate">Interactive installer script</span>
-          </div>
-          <div class="flex items-center gap-3 shrink-0">
-            <button onclick="copyCurl(this, 'install.sh')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
-            <a href="install.sh" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
-          </div>
-        </div>
-        <div class="flex items-center justify-between py-3.5 gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">docker-compose.yml</span>
-            <span class="text-xs text-neutral-400 shrink-0">~5 KB</span>
-            <span class="text-xs text-neutral-500 truncate">Orchestrates the four services</span>
-          </div>
-          <div class="flex items-center gap-3 shrink-0">
-            <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
-            <a href="docker-compose.yml" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
+      <!-- Table Rows -->
+      <div class="divide-y divide-neutral-border">
+        <!-- Row 1 -->
+        <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
+          <div class="col-span-3 text-green-500">-rwxr-xr-x</div>
+          <div class="col-span-2 text-neutral-muted">~24 KB</div>
+          <div class="col-span-4 font-semibold text-neutral-text">install.sh</div>
+          <div class="col-span-3 text-right flex items-center justify-end gap-4">
+            <button onclick="copyCurl(this, 'install.sh')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <a href="install.sh" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>
-        <div class="flex items-center justify-between py-3.5 gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="text-sm font-mono font-medium text-neutral-900 shrink-0">.env.selfhosted</span>
-            <span class="text-xs text-neutral-400 shrink-0">~4 KB</span>
-            <span class="text-xs text-neutral-500 truncate">Environment variable template</span>
+        <!-- Row 2 -->
+        <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
+          <div class="col-span-3 text-neutral-muted">-rw-r--r--</div>
+          <div class="col-span-2 text-neutral-muted">~5 KB</div>
+          <div class="col-span-4 font-semibold text-neutral-text">docker-compose.yml</div>
+          <div class="col-span-3 text-right flex items-center justify-end gap-4">
+            <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <a href="docker-compose.yml" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
-          <div class="flex items-center gap-3 shrink-0">
-            <button onclick="copyCurl(this, '.env.selfhosted')" class="text-xs font-mono text-indigo-600 hover:text-indigo-700 transition-colors">curl -O</button>
-            <a href=".env.selfhosted" download class="text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">Download</a>
+        </div>
+        <!-- Row 3 -->
+        <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
+          <div class="col-span-3 text-neutral-muted">-rw-r--r--</div>
+          <div class="col-span-2 text-neutral-muted">~4 KB</div>
+          <div class="col-span-4 font-semibold text-neutral-text font-mono">.env.selfhosted</div>
+          <div class="col-span-3 text-right flex items-center justify-end gap-4">
+            <button onclick="copyCurl(this, '.env.selfhosted')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <a href=".env.selfhosted" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>
       </div>
@@ -165,12 +306,12 @@
   </section>
 </main>
 
-<footer class="border-t border-neutral-200">
-  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-    <p class="text-xs text-neutral-400">&copy; 2026 NUSAAS</p>
+<footer class="border-t border-neutral-border bg-neutral-bg">
+  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between text-xs font-mono text-neutral-muted">
+    <span>&copy; 2026 NUSAAS</span>
     <nav class="flex items-center gap-5">
-      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Docker Hub</a>
-      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="text-xs font-medium text-neutral-500 hover:text-neutral-800 transition-colors">Compose file</a>
+      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="hover:text-neutral-text transition-colors">Docker Hub</a>
+      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="hover:text-neutral-text transition-colors">Compose File</a>
     </nav>
   </div>
 </footer>
@@ -183,17 +324,18 @@ function copyCmd(btn) {
   var text = 'curl -fsSL ' + o + '/install.sh -o install.sh\nbash install.sh';
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
-    btn.textContent = 'Copied!';
+    btn.textContent = '[Copied!]';
     setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
 
+// Copy inline quickstart text
 function copyInline(btn) {
   var o = origin();
   var text = 'curl -fsSL ' + o + '/install.sh | bash';
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
-    btn.textContent = 'Copied!';
+    btn.textContent = '[Copied!]';
     setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
@@ -207,6 +349,206 @@ function copyCurl(btn, file) {
     setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
+
+// Terminal typewriter typing animation
+document.addEventListener('DOMContentLoaded', function() {
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var text1 = 'curl -fsSL https://get.nusaas.com/install.sh -o install.sh';
+  var text2 = 'bash install.sh';
+  
+  var line1 = document.getElementById('line1');
+  var line2 = document.getElementById('line2');
+  var line2Container = document.getElementById('line2-container');
+  
+  var cursor = document.createElement('span');
+  cursor.className = 'terminal-cursor inline-block w-1.5 h-4 bg-primary ml-0.5 align-middle';
+  
+  if (prefersReducedMotion) {
+    line1.textContent = text1;
+    line2Container.classList.remove('hidden');
+    line2.textContent = text2;
+    line2.appendChild(cursor);
+    return;
+  }
+  
+  var i = 0;
+  var j = 0;
+  
+  line1.appendChild(cursor);
+  
+  function typeLine1() {
+    if (i < text1.length) {
+      cursor.insertAdjacentText('beforebegin', text1.charAt(i));
+      i++;
+      setTimeout(typeLine1, Math.random() * 25 + 10);
+    } else {
+      setTimeout(startLine2, 500);
+    }
+  }
+  
+  function startLine2() {
+    if (line1.contains(cursor)) {
+      line1.removeChild(cursor);
+    }
+    line2Container.classList.remove('hidden');
+    line2.appendChild(cursor);
+    typeLine2();
+  }
+  
+  function typeLine2() {
+    if (j < text2.length) {
+      cursor.insertAdjacentText('beforebegin', text2.charAt(j));
+      j++;
+      setTimeout(typeLine2, Math.random() * 35 + 15);
+    }
+  }
+  
+  setTimeout(typeLine1, 600);
+});
+
+// Interactive Installer Script Demo Loop
+document.addEventListener('DOMContentLoaded', function() {
+  const screen = document.getElementById('demo-terminal-screen');
+  if (!screen) return;
+  
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  
+  const demoSteps = [
+    { type: 'prompt', text: 'bash install.sh', delay: 1000 },
+    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-neutral-muted">ERP & POS Infrastructure for East Africa</span>\n <span class="text-neutral-muted">Version : latest</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Checking system requirements...', delay: 400 },
+    { type: 'write', html: '  docker ... <span class="text-green-500 font-bold">[ OK ]</span> Docker 24.0.7 detected', delay: 500 },
+    { type: 'write', html: '  openssl ... <span class="text-green-500 font-bold">[ OK ]</span> openssl detected', delay: 400 },
+    { type: 'write', html: '  docker compose ... <span class="text-green-500 font-bold">[ OK ]</span> Docker Compose (v2) detected', delay: 500 },
+    { type: 'write', html: '  docker daemon ... <span class="text-green-500 font-bold">[ OK ]</span> Daemon is running\n', delay: 600 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Install directory: <span class="text-primary">/home/nusaas/app</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-neutral-text font-bold">━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
+    { type: 'prompt-input', label: 'App Name (your business name) [MyERP]', input: 'Safari Logistics', delay: 1000 },
+    { type: 'prompt-input', label: 'API URL  (e.g. https://api.erp.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
+    { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.erp.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
+    { type: 'prompt-input', label: 'App timezone [Africa/Nairobi]', input: '', delay: 600 },
+    { type: 'prompt-input', label: 'Default currency [KES]', input: '', delay: 600 },
+    { type: 'prompt-input', label: 'Support email [support@safari.co.ke]', input: '', delay: 600 },
+    { type: 'write', html: '\n<span class="text-neutral-text font-bold">━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-primary font-bold">[ WARN ]</span> The compose file includes a built-in database container.', delay: 400 },
+    { type: 'prompt-input', label: 'Use built-in database container? [Y/n]', input: 'y', delay: 800 },
+    { type: 'write', html: '  <span class="text-neutral-text font-bold">Select database engine:</span>\n    1) MySQL 8.0+\n    2) MariaDB 10.6+\n    3) PostgreSQL 15+\n', delay: 500 },
+    { type: 'prompt-input', label: 'Database engine [1]', input: '3', delay: 800 },
+    { type: 'prompt-input', label: 'Database password (set a strong password)', input: '••••••••', delay: 1000 },
+    { type: 'prompt-input', label: '\nProceed with this configuration? [Y/n]', input: 'y', delay: 800 },
+    { type: 'write', html: '\n<span class="text-accent-glow font-bold">[NuSaaS]</span> Generating cryptographic secrets... <span class="text-green-500">[ OK ]</span>', delay: 600 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Writing configuration files... <span class="text-green-500">[ OK ]</span>', delay: 500 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Pulling NuSaaS images from Docker Hub...', delay: 400 },
+    { type: 'write', html: '  nusaas-api ... <span class="text-green-500">Pulling</span>', delay: 200 },
+    { type: 'write', html: '  nusaas-web ... <span class="text-green-500">Pulling</span>', delay: 200 },
+    { type: 'write', html: '<span class="text-green-500 font-bold">[  OK  ]</span> Images pulled successfully\n', delay: 600 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Starting services...', delay: 400 },
+    { type: 'write', html: '  api ... <span class="text-green-500">Running</span>\n  web ... <span class="text-green-500">Running</span>', delay: 500 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Waiting for backend to become healthy...', delay: 300 },
+    { type: 'write', html: '  ....................................... <span class="text-green-500">[ Healthy ]</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Running database migrations and seeding... <span class="text-green-500">[ OK ]</span>', delay: 800 },
+    { type: 'write', html: '\n<span class="text-green-500 font-bold">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-green-500 font-bold">  NuSaaS is running!</span>\n<span class="text-green-500 font-bold">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n\n  Web Interface → <span class="text-primary font-bold underline">https://app.safari.co.ke</span>\n  API Endpoint  → <span class="text-primary font-bold underline">https://api.safari.co.ke</span>\n', delay: 8000 }
+  ];
+  
+  let currentStep = 0;
+  
+  function executeNextStep() {
+    if (currentStep >= demoSteps.length) {
+      currentStep = 0;
+      screen.innerHTML = '';
+      setTimeout(executeNextStep, 500);
+      return;
+    }
+    
+    const step = demoSteps[currentStep];
+    currentStep++;
+    
+    if (step.type === 'prompt') {
+      const div = document.createElement('div');
+      div.className = 'flex items-start gap-1';
+      div.innerHTML = '<span class="text-primary font-bold shrink-0">nusaas@self-host:~$</span> ';
+      const textSpan = document.createElement('span');
+      textSpan.className = 'text-neutral-text font-mono whitespace-pre';
+      div.appendChild(textSpan);
+      screen.appendChild(div);
+      screen.scrollTop = screen.scrollHeight;
+      
+      const cursor = document.createElement('span');
+      cursor.className = 'terminal-cursor inline-block w-1.5 h-3.5 bg-primary ml-0.5 align-middle';
+      textSpan.appendChild(cursor);
+      
+      let charIdx = 0;
+      function typeChar() {
+        if (prefersReducedMotion) {
+          cursor.insertAdjacentText('beforebegin', step.text);
+          textSpan.removeChild(cursor);
+          setTimeout(executeNextStep, 200);
+          return;
+        }
+        if (charIdx < step.text.length) {
+          cursor.insertAdjacentText('beforebegin', step.text.charAt(charIdx));
+          charIdx++;
+          setTimeout(typeChar, Math.random() * 30 + 15);
+        } else {
+          textSpan.removeChild(cursor);
+          setTimeout(executeNextStep, step.delay);
+        }
+      }
+      setTimeout(typeChar, 100);
+      
+    } else if (step.type === 'prompt-input') {
+      const div = document.createElement('div');
+      div.className = 'flex flex-wrap items-start gap-1';
+      if (step.label) {
+        div.innerHTML = `<span class="text-neutral-text font-bold">${step.label}:</span> `;
+      }
+      const textSpan = document.createElement('span');
+      textSpan.className = 'text-primary font-mono whitespace-pre font-medium';
+      div.appendChild(textSpan);
+      screen.appendChild(div);
+      screen.scrollTop = screen.scrollHeight;
+      
+      if (!step.input) {
+        setTimeout(() => {
+          setTimeout(executeNextStep, step.delay);
+        }, 300);
+        return;
+      }
+      
+      const cursor = document.createElement('span');
+      cursor.className = 'terminal-cursor inline-block w-1.5 h-3.5 bg-primary ml-0.5 align-middle';
+      textSpan.appendChild(cursor);
+      
+      let charIdx = 0;
+      function typeInputChar() {
+        if (prefersReducedMotion) {
+          cursor.insertAdjacentText('beforebegin', step.input);
+          textSpan.removeChild(cursor);
+          setTimeout(executeNextStep, 200);
+          return;
+        }
+        if (charIdx < step.input.length) {
+          cursor.insertAdjacentText('beforebegin', step.input.charAt(charIdx));
+          charIdx++;
+          setTimeout(typeInputChar, Math.random() * 40 + 20);
+        } else {
+          textSpan.removeChild(cursor);
+          setTimeout(executeNextStep, step.delay);
+        }
+      }
+      setTimeout(typeInputChar, 100);
+      
+    } else if (step.type === 'write') {
+      const div = document.createElement('div');
+      div.className = 'whitespace-pre-wrap font-mono';
+      div.innerHTML = step.html;
+      screen.appendChild(div);
+      screen.scrollTop = screen.scrollHeight;
+      setTimeout(executeNextStep, prefersReducedMotion ? 100 : step.delay);
+    }
+  }
+  
+  executeNextStep();
+});
 </script>
 
 </body>
