@@ -438,23 +438,23 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const demoSteps = [
     { type: 'prompt', text: 'bash install.sh', delay: 1000 },
-    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-neutral-muted">ERP & POS Infrastructure for East Africa</span>\n <span class="text-neutral-muted">Version : latest</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : latest</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Checking system requirements...', delay: 400 },
     { type: 'write', html: '  docker ... <span class="text-green-500 font-bold">[ OK ]</span> Docker 24.0.7 detected', delay: 500 },
     { type: 'write', html: '  openssl ... <span class="text-green-500 font-bold">[ OK ]</span> openssl detected', delay: 400 },
     { type: 'write', html: '  docker compose ... <span class="text-green-500 font-bold">[ OK ]</span> Docker Compose (v2) detected', delay: 500 },
     { type: 'write', html: '  docker daemon ... <span class="text-green-500 font-bold">[ OK ]</span> Daemon is running\n', delay: 600 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Install directory: <span class="text-primary">/home/nusaas/app</span>\n', delay: 800 },
-    { type: 'write', html: '<span class="text-neutral-text font-bold">━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
+    { type: 'write', html: '<span class="text-[#fafafa] font-bold">━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
     { type: 'prompt-input', label: 'App Name (your business name) [MyERP]', input: 'Safari Logistics', delay: 1000 },
     { type: 'prompt-input', label: 'API URL  (e.g. https://api.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'App timezone [Africa/Nairobi]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Default currency [KES]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Support email [support@safari.co.ke]', input: '', delay: 600 },
-    { type: 'write', html: '\n<span class="text-neutral-text font-bold">━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-primary font-bold">[ WARN ]</span> The compose file includes a built-in database container.', delay: 400 },
+    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-primary font-bold">[ WARN ]</span> The compose file includes a built-in database container.', delay: 400 },
     { type: 'prompt-input', label: 'Use built-in database container? [Y/n]', input: 'y', delay: 800 },
-    { type: 'write', html: '  <span class="text-neutral-text font-bold">Select database engine:</span>\n    1) MySQL 8.0+\n    2) MariaDB 10.6+\n    3) PostgreSQL 15+\n', delay: 500 },
+    { type: 'write', html: '  <span class="text-[#fafafa] font-bold">Select database engine:</span>\n    1) MySQL 8.0+\n    2) MariaDB 10.6+\n    3) PostgreSQL 15+\n', delay: 500 },
     { type: 'prompt-input', label: 'Database engine [1]', input: '3', delay: 800 },
     { type: 'prompt-input', label: 'Database password (set a strong password)', input: '••••••••', delay: 1000 },
     { type: 'prompt-input', label: '\nProceed with this configuration? [Y/n]', input: 'y', delay: 800 },
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
       div.className = 'flex items-start gap-1';
       div.innerHTML = '<span class="text-primary font-bold shrink-0">nusaas@self-host:~$</span> ';
       const textSpan = document.createElement('span');
-      textSpan.className = 'text-neutral-text font-mono whitespace-pre';
+      textSpan.className = 'text-[#fafafa] font-mono whitespace-pre';
       div.appendChild(textSpan);
       screen.appendChild(div);
       screen.scrollTop = screen.scrollHeight;
@@ -522,7 +522,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const div = document.createElement('div');
       div.className = 'flex flex-wrap items-start gap-1';
       if (step.label) {
-        div.innerHTML = `<span class="text-neutral-text font-bold">${step.label}:</span> `;
+        div.innerHTML = `<span class="text-[#fafafa] font-bold">${step.label}:</span> `;
       }
       const textSpan = document.createElement('span');
       textSpan.className = 'text-primary font-mono whitespace-pre font-medium';
