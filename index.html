@@ -131,13 +131,9 @@
           
           <!-- Quick actions -->
           <div class="mt-3 flex items-center gap-4">
-            <button onclick="copyCmd(this)" class="font-mono text-xs font-medium text-primary hover:text-accent-glow transition-colors px-3 py-1.5 border border-primary/30 rounded bg-primary/5 hover:bg-primary/10">
-              [Copy both lines]
-            </button>
+            <button onclick="copyCmd(this)" class="w-40 justify-center flex font-mono text-xs font-medium text-primary hover:text-accent-glow transition-colors px-3 py-1.5 border border-primary/30 rounded bg-primary/5 hover:bg-primary/10">[Copy both lines]</button>
             <span class="font-mono text-xs text-neutral-border select-none">|</span>
-            <button onclick="copyInline(this)" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors">
-              copy the one-liner
-            </button>
+            <button onclick="copyInline(this)" class="w-48 justify-center flex font-mono text-xs font-medium text-neutral-muted hover:text-neutral-text transition-colors px-3 py-1.5 border border-neutral-border rounded hover:bg-neutral-surface">[copy one-liner]</button>
           </div>
         </div>
 
@@ -277,7 +273,7 @@
           <div class="col-span-2 text-neutral-muted">~24 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text">install.sh</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
-            <button onclick="copyCurl(this, 'install.sh')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <button onclick="copyCurl(this, 'install.sh')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
             <a href="install.sh" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>
@@ -287,7 +283,7 @@
           <div class="col-span-2 text-neutral-muted">~5 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text">docker-compose.yml</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
-            <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
             <a href="docker-compose.yml" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>
@@ -297,7 +293,7 @@
           <div class="col-span-2 text-neutral-muted">~4 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text font-mono">.env.selfhosted</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
-            <button onclick="copyCurl(this, '.env.selfhosted')" class="text-primary hover:text-accent-glow transition-colors font-medium">curl -O</button>
+            <button onclick="copyCurl(this, '.env.selfhosted')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
             <a href=".env.selfhosted" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>

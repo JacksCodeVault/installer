@@ -44,6 +44,53 @@ warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
 error()   { echo "[ERROR] $*"; echo "[ERROR] $*" >&2; }
 die()     { error "$*"; exit 1; }
 
+run_with_spinner() {
+  local msg="$1"
+  shift
+  info "${msg}..."
+  
+  local hide_cursor=""
+  local show_cursor=""
+  if tput civis >/dev/null 2>&1 && tput cnorm >/dev/null 2>&1; then
+    hide_cursor=$(tput civis)
+    show_cursor=$(tput cnorm)
+  fi
+  
+  local log_file
+  log_file=$(mktemp 2>/dev/null || echo "/tmp/nusaas-install-$RANDOM.log")
+  
+  # Run command in background
+  "$@" >"${log_file}" 2>&1 &
+  local pid=$!
+  
+  # Hide cursor
+  echo -ne "${hide_cursor}"
+  
+  local delay=0.1
+  local spinstr='|/-\\'
+  while kill -0 "$pid" 2>/dev/null; do
+    local temp=${spinstr#?}
+    printf " [%c] " "$spinstr"
+    spinstr=$temp${spinstr%"$temp"}
+    sleep $delay
+    printf "\b\b\b\b\b"
+  done
+  
+  # Restore cursor
+  echo -ne "${show_cursor}"
+  printf "     \b\b\b\b\b"
+  
+  if wait "$pid"; then
+    success "${msg} complete."
+    rm -f "${log_file}"
+  else
+    echo -e "\n${RED}${BOLD}[ ERROR ]${RESET} ${msg} failed."
+    cat "${log_file}" >&2
+    rm -f "${log_file}"
+    exit 1
+  fi
+}
+
 # ── Detect interactive mode ──────────────────────────────────────────────────
 if [[ -t 0 ]]; then
   INTERACTIVE=true
@@ -530,49 +577,50 @@ fi
 
 # ── 10. Pull images ───────────────────────────────────────────────────────────
 echo
-info "Pulling NuSaaS images from Docker Hub..."
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
-success "Images pulled."
+run_with_spinner "Pulling NuSaaS images from Docker Hub" \
+  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
 
 # ── 11. Start services ─────────────────────────────────────────────────────────
-info "Starting services..."
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
-success "Services started."
+run_with_spinner "Starting containers" \
+  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
 
 # ── 12. Wait for backend ──────────────────────────────────────────────────────
-info "Waiting for backend to become healthy..."
-MAX_WAIT=120
-WAITED=0
-until ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-      curl -sf http://localhost:4000/api/health &>/dev/null; do
-  sleep 3
-  WAITED=$((WAITED + 3))
-  if [[ ${WAITED} -ge ${MAX_WAIT} ]]; then
-    die "Backend did not become healthy within ${MAX_WAIT}s. Check logs: ${COMPOSE_CMD} -f ${COMPOSE_FILE} logs api"
-  fi
-  echo -n "."
-done
-echo
-success "Backend is healthy."
+run_with_spinner "Waiting for backend to become healthy" \
+  bash -c '
+    COMPOSE_CMD="$1"
+    COMPOSE_FILE="$2"
+    max_wait=120
+    waited=0
+    until $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api curl -sf http://localhost:4000/api/health &>/dev/null; do
+      sleep 3
+      waited=$((waited + 3))
+      if [ $waited -ge $max_wait ]; then
+        exit 1
+      fi
+    done
+  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
 
 # ── 13. Run migrations and seeders ────────────────────────────────────────────
-info "Running database migrations and seeding core configuration..."
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan migrate --seed --force
+run_with_spinner "Running database migrations and seeding" \
+  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api php artisan migrate --seed --force
 
-info "Warming search index..."
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan scout:sync-index-settings || true
+run_with_spinner "Warming search index" \
+  bash -c '
+    COMPOSE_CMD="$1"
+    COMPOSE_FILE="$2"
+    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan scout:sync-index-settings || true
+  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
 
-info "Caching config, routes, and events for production..."
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan config:cache 2>/dev/null
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan route:cache
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan event:cache
+run_with_spinner "Caching configurations for production" \
+  bash -c '
+    COMPOSE_CMD="$1"
+    COMPOSE_FILE="$2"
+    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan config:cache >/dev/null 2>&1 || true
+    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan route:cache >/dev/null 2>&1 || true
+    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan event:cache >/dev/null 2>&1 || true
+  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
 
-success "Database ready."
+success "Database and services ready."
 
 # ── 14. Done ──────────────────────────────────────────────────────────────────
 echo
