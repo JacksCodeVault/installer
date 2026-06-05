@@ -14,13 +14,13 @@
     theme: {
       extend: {
         colors: {
-          primary: '#ff5500',
-          'neutral-bg': '#0a0a0c',
-          'neutral-surface': '#121215',
-          'neutral-border': '#242429',
-          'neutral-text': '#fafafa',
-          'neutral-muted': '#8a8a93',
-          'accent-glow': '#ff7733',
+          primary: 'var(--primary)',
+          'neutral-bg': 'var(--neutral-bg)',
+          'neutral-surface': 'var(--neutral-surface)',
+          'neutral-border': 'var(--neutral-border)',
+          'neutral-text': 'var(--neutral-text)',
+          'neutral-muted': 'var(--neutral-muted)',
+          'accent-glow': 'var(--accent-glow)',
         },
         fontFamily: {
           display: ['Fira Code', 'JetBrains Mono', 'monospace'],
@@ -36,9 +36,32 @@
   }
 </script>
 <style>
+  :root {
+    --primary: #ff5500;
+    --neutral-bg: #fcfbfa;
+    --neutral-surface: #f5f3ef;
+    --neutral-border: #e5dfd5;
+    --neutral-text: #1c1b19;
+    --neutral-muted: #706e67;
+    --accent-glow: #e04400;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #ff5500;
+      --neutral-bg: #0a0a0c;
+      --neutral-surface: #121215;
+      --neutral-border: #242429;
+      --neutral-text: #fafafa;
+      --neutral-muted: #8a8a93;
+      --accent-glow: #ff7733;
+    }
+  }
+
   body {
-    background-color: #0a0a0c;
-    color: #fafafa;
+    background-color: var(--neutral-bg);
+    color: var(--neutral-text);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
   /* Custom scrollbar to match terminal theme */
   ::-webkit-scrollbar {
@@ -46,15 +69,15 @@
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #0a0a0c;
+    background: var(--neutral-bg);
   }
   ::-webkit-scrollbar-thumb {
-    background: #121215;
-    border: 1px solid #242429;
+    background: var(--neutral-surface);
+    border: 1px solid var(--neutral-border);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #242429;
+    background: var(--neutral-border);
   }
   /* Blinking terminal cursor animation */
   @keyframes blink {
@@ -75,9 +98,12 @@
 
 <header class="border-b border-neutral-border bg-neutral-bg select-none">
   <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-    <span class="font-display text-sm font-semibold tracking-tight text-neutral-text">
-      <span class="text-primary font-bold">nusaas</span>@self-host:<span class="text-accent-glow">~</span>$
-    </span>
+    <div class="flex items-center gap-4">
+      <span class="font-display text-sm font-semibold tracking-tight text-neutral-text">
+        <span class="text-primary font-bold">nusaas</span>@self-host:<span class="text-accent-glow">~</span>$
+      </span>
+      <a href="troubleshoot.html" class="font-mono text-xs text-primary hover:text-accent-glow transition-colors ml-4">[troubleshooting-guide]</a>
+    </div>
     <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors">
       [docker-hub]
     </a>
@@ -117,7 +143,7 @@
               <div class="w-10"></div>
             </div>
             <!-- Terminal Content -->
-            <div id="terminal-screen" class="p-4 overflow-x-auto font-mono text-xs sm:text-sm text-neutral-text leading-relaxed bg-[#08080a] min-h-[80px] flex flex-col justify-start">
+            <div id="terminal-screen" class="p-4 overflow-x-auto font-mono text-xs sm:text-sm text-[#fafafa] leading-relaxed bg-[#08080a] min-h-[80px] flex flex-col justify-start">
               <div class="flex items-start gap-1">
                 <span class="text-primary select-none shrink-0">$</span>
                 <span id="line1" class="whitespace-pre"></span>
@@ -198,7 +224,7 @@
           <div>
             <h3 class="text-xs font-semibold text-neutral-text font-mono">Fetch Script</h3>
             <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Download the secure installer script directly into your server directory.</p>
-            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-zinc-400 overflow-x-auto leading-tight select-text">
               curl -fsSL https://get.nusaas.com/install.sh -o install.sh
             </div>
           </div>
@@ -208,7 +234,7 @@
           <div>
             <h3 class="text-xs font-semibold text-neutral-text font-mono">Execute Wizard</h3>
             <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Run the installer to configure databases, mail services, and cryptographic secrets.</p>
-            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-zinc-400 overflow-x-auto leading-tight select-text">
               bash install.sh
             </div>
           </div>
@@ -218,7 +244,7 @@
           <div>
             <h3 class="text-xs font-semibold text-neutral-text font-mono">Launch Console</h3>
             <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Log in to your private POS &amp; ERP management portal once docker containers spin up.</p>
-            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-neutral-muted overflow-x-auto leading-tight select-text">
+            <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-zinc-400 overflow-x-auto leading-tight select-text">
               https://app.yourdomain.com
             </div>
           </div>
@@ -240,7 +266,7 @@
             <div class="w-10"></div>
           </div>
           <!-- Terminal Screen -->
-          <div id="demo-terminal-screen" class="p-4 font-mono text-[11px] text-neutral-text leading-relaxed bg-[#08080a] overflow-y-auto h-[350px] flex-1 select-text">
+          <div id="demo-terminal-screen" class="p-4 font-mono text-[11px] text-[#fafafa] leading-relaxed bg-[#08080a] overflow-y-auto h-[350px] flex-1 select-text">
             <!-- Simulated installer log lines append here -->
           </div>
         </div>
@@ -306,6 +332,7 @@
   <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between text-xs font-mono text-neutral-muted">
     <span>&copy; 2026 NUSAAS</span>
     <nav class="flex items-center gap-5">
+      <a href="troubleshoot.html" class="hover:text-primary transition-colors">Troubleshooting Guide</a>
       <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="hover:text-neutral-text transition-colors">Docker Hub</a>
       <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="hover:text-neutral-text transition-colors">Compose File</a>
     </nav>
@@ -420,8 +447,8 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Install directory: <span class="text-primary">/home/nusaas/app</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-neutral-text font-bold">━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
     { type: 'prompt-input', label: 'App Name (your business name) [MyERP]', input: 'Safari Logistics', delay: 1000 },
-    { type: 'prompt-input', label: 'API URL  (e.g. https://api.erp.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
-    { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.erp.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
+    { type: 'prompt-input', label: 'API URL  (e.g. https://api.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
+    { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'App timezone [Africa/Nairobi]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Default currency [KES]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Support email [support@safari.co.ke]', input: '', delay: 600 },

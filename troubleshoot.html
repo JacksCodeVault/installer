@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NUSAAS — Self-Host Troubleshooting &amp; Diagnostics</title>
+<meta name="description" content="Troubleshooting and recovery guide for NuSaaS self-hosted deployments. Fix CORS issues, SSL mismatches, database hangs, and container issues.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: 'var(--primary)',
+          'neutral-bg': 'var(--neutral-bg)',
+          'neutral-surface': 'var(--neutral-surface)',
+          'neutral-border': 'var(--neutral-border)',
+          'neutral-text': 'var(--neutral-text)',
+          'neutral-muted': 'var(--neutral-muted)',
+          'accent-glow': 'var(--accent-glow)',
+        },
+        fontFamily: {
+          display: ['Fira Code', 'JetBrains Mono', 'monospace'],
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['Fira Code', 'JetBrains Mono', 'monospace'],
+        },
+        borderRadius: {
+          sm: '4px',
+          md: '6px',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root {
+    --primary: #ff5500;
+    --neutral-bg: #fcfbfa;
+    --neutral-surface: #f5f3ef;
+    --neutral-border: #e5dfd5;
+    --neutral-text: #1c1b19;
+    --neutral-muted: #706e67;
+    --accent-glow: #e04400;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #ff5500;
+      --neutral-bg: #0a0a0c;
+      --neutral-surface: #121215;
+      --neutral-border: #242429;
+      --neutral-text: #fafafa;
+      --neutral-muted: #8a8a93;
+      --accent-glow: #ff7733;
+    }
+  }
+
+  body {
+    background-color: var(--neutral-bg);
+    color: var(--neutral-text);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--neutral-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--neutral-surface);
+    border: 1px solid var(--neutral-border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--neutral-border);
+  }
+</style>
+</head>
+<body class="font-sans antialiased bg-neutral-bg text-neutral-text">
+
+<header class="border-b border-neutral-border bg-neutral-bg select-none">
+  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <span class="font-display text-sm font-semibold tracking-tight text-neutral-text">
+        <span class="text-primary font-bold">nusaas</span>@self-host:<span class="text-accent-glow">~</span>$
+      </span>
+      <a href="index.html" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors ml-4">[back-to-home]</a>
+    </div>
+    <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs text-neutral-muted hover:text-neutral-text transition-colors">
+      [docker-hub]
+    </a>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-6 pt-12 pb-16">
+  <!-- Title Section -->
+  <section class="mb-12">
+    <div class="font-mono text-xs text-primary mb-2 select-none">&gt; diagnose --verbose status.log</div>
+    <h1 class="font-display text-3xl font-bold tracking-tight text-neutral-text leading-tight">
+      Self-Host Troubleshooting Guide
+    </h1>
+    <p class="mt-3 text-sm text-neutral-muted leading-relaxed max-w-2xl">
+      A comprehensive manual mapping root causes, immediate hot fixes, and permanent remedies for common infrastructure issues encountered during self-hosting.
+    </p>
+  </section>
+
+  <!-- Troubleshooting Cards -->
+  <div class="space-y-8">
+    
+    <!-- Issue 1: CORS Block -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">CORS-01</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">CORS Policy / Preflight Request Blocked</h2>
+        </div>
+        <span class="font-mono text-xs text-red-500">[Severity: High]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            Access to fetch at 'https://api.yourdomain.com/api/auth/login' from origin 'https://app.yourdomain.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present.
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            In standard bash, <code class="text-primary font-semibold">$#</code> is a special variable representing the number of script arguments. In older installers, the <code class="text-neutral-text font-semibold">.env</code> generator heredoc was unescaped, causing bash to evaluate <code class="text-primary font-semibold">$#</code> to <code class="text-primary font-semibold">0</code>. This wrote <code class="text-neutral-text font-semibold">CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*0</code> to your config, breaking regular expression matching.
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// IMMEDIATE_HOT_FIX</p>
+          <p class="text-neutral-muted mb-2">Run this on your server host to repair the config regex and recreate the API container with updated variables:</p>
+          <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">sed -i 's|CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*0|CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*\$#|g' ~/docker/nusaas/.env
+docker compose up -d</pre>
+            <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue 2: Caching & Service Worker -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">CACHE-02</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Browser Connects to Stale/Old Domains</h2>
+        </div>
+        <span class="font-mono text-xs text-yellow-500">[Severity: Medium]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            You updated the domain settings in <code class="text-primary font-semibold">.env.frontend</code> and recreated containers, but browser developer console still shows requests targeting old domains (e.g. wss://api.olddomain.com).
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            1. Running <code class="text-neutral-text font-semibold">docker compose restart</code> only restarts container processes; it does not recreate them with new environment variables. <br>
+            2. The React Frontend uses a Service Worker (<code class="text-primary font-semibold">sw.js</code>) that aggressively caches JS files locally in the client browser, forcing it to keep loading the old config.
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// SOLUTION_STEPS</p>
+          <ol class="list-decimal list-inside space-y-2 text-neutral-muted font-mono text-xs">
+            <li>Force recreate the containers to inject the new env values:
+              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-2.5 text-[11px] text-[#fafafa] overflow-x-auto select-text">docker compose up -d</div>
+            </li>
+            <li>Test in an <strong>Incognito / Private Window</strong> (bypasses Service Worker cache).</li>
+            <li>In your main window, open DevTools (<kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">F12</kbd>), navigate to the <strong>Network</strong> tab, check <strong>Disable Cache</strong>, and reload with <kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">Ctrl+F5</kbd> (Windows) or <kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">Cmd+Shift+R</kbd> (Mac).</li>
+            <li>If using Firefox, unregister the service worker directly at: <code class="text-primary select-text">about:debugging#/runtime/this-firefox</code></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue 3: Cloudflare SSL Mismatch -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">SSL-03</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Cloudflare ERR_SSL_VERSION_OR_CIPHER_MISMATCH</h2>
+        </div>
+        <span class="font-mono text-xs text-red-500">[Severity: High]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            This site can’t provide a secure connection. app.erp.yourdomain.com uses an unsupported protocol.<br>ERR_SSL_VERSION_OR_CIPHER_MISMATCH
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            Cloudflare's free Universal SSL certificate only covers wildcards up to the 3rd level (<code class="text-neutral-text font-semibold">*.yourdomain.com</code>). If you deploy using nested 4th-level subdomains (like <code class="text-primary font-semibold">app.erp.yourdomain.com</code>), Cloudflare cannot negotiate a secure SSL handshake at the Edge unless you purchase their Advanced Certificate Manager (ACM).
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// REMEDY</p>
+          <p class="text-neutral-muted select-text">
+            Flatten your subdomain structure to the 3rd level. Remove the nested <code class="text-primary font-semibold">erp.</code> segment entirely:
+            <ul class="list-disc list-inside mt-2 space-y-1 text-neutral-muted">
+              <li>Use <code class="text-neutral-text font-semibold font-mono">app.yourdomain.com</code> or <code class="text-neutral-text font-semibold font-mono">app-erp.yourdomain.com</code></li>
+              <li>Use <code class="text-neutral-text font-semibold font-mono">api.yourdomain.com</code> or <code class="text-neutral-text font-semibold font-mono">api-erp.yourdomain.com</code></li>
+            </li>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue 4: Database migrations hang -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DB-04</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Database Migration & Seeding Hangs</h2>
+        </div>
+        <span class="font-mono text-xs text-yellow-500">[Severity: Medium]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            The installation script gets stuck indefinitely at:<br>[NuSaaS] Running database migrations and seeding... [/]
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            When running migrations, Laravel shells out to the native <code class="text-primary font-semibold">mysql</code> binary inside the backend container to load the schema dump file. If your backend container's default MySQL client (Debian's MariaDB client) connects to a MySQL 8.0 server advertising self-signed SSL certs, the handshake fails/hangs with <code class="text-neutral-text font-semibold">ERROR 2026 (HY000): TLS/SSL error</code>.
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// IMMEDIATE_HOT_FIX</p>
+          <p class="text-neutral-muted mb-2">Write a MariaDB client configuration directly inside the running backend container to skip SSL validation, then manually run the migration command:</p>
+          <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose exec api sh -c "printf '[client]\nskip-ssl\n' > /etc/my.cnf"
+docker compose exec -T api php artisan migrate --seed --force</pre>
+            <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue 5: Postgres Driver Missing -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DRV-05</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Relational Driver Error (PostgreSQL)</h2>
+        </div>
+        <span class="font-mono text-xs text-red-500">[Severity: High]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            could not find driver (Connection: pgsql, Host: nusaas-db, Port: 5432, Database: nusaas ...)
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            Older releases of the FrankenPHP backend base image (<code class="text-primary font-semibold">ghostdev1/nusaas-backend</code>) were compiled without the native PostgreSQL client binaries and PHP extension (<code class="text-neutral-text font-semibold">pdo_pgsql</code>).
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// RESOLUTION</p>
+          <p class="text-neutral-muted mb-2">Pull down the latest <code class="text-neutral-text font-semibold">v1.0.4+</code> images which include compiled PostgreSQL extensions, and recreate the stack:</p>
+          <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose pull
+docker compose up -d</pre>
+            <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue 6: Unhealthy Containers / Worker Crash Loops -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DOCKER-06</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Worker Crash Loops &amp; Unhealthy Statuses</h2>
+        </div>
+        <span class="font-mono text-xs text-yellow-500">[Severity: Medium]</span>
+      </div>
+      
+      <div class="space-y-4 font-mono text-xs leading-relaxed">
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
+          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
+            nusaas-worker   Restarting (2) 59 seconds ago<br>nusaas-ws       Up 30 minutes (unhealthy)<br>nusaas-cron     Up 30 minutes (unhealthy)
+          </p>
+        </div>
+        
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
+          <p class="text-neutral-muted select-text">
+            1. The worker container command runs supervisord on a config located at <code class="text-primary font-semibold">/etc/supervisor/conf.d/supervisord.conf</code> which does not exist (the correct path inside the container is <code class="text-neutral-text font-semibold">/var/www/docker/supervisor/supervisord.conf</code>).<br>
+            2. The <code class="text-primary font-semibold">cron</code> and <code class="text-primary font-semibold">ws</code> containers inherit the image-level healthcheck on port 4000. Since they do not run a web server, their health checks fail even though they are running properly.
+          </p>
+        </div>
+
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-2">// REMEDY</p>
+          <p class="text-neutral-muted mb-2">Modify the service configurations in your <code class="text-neutral-text font-semibold">docker-compose.yml</code>:</p>
+          <ol class="list-decimal list-inside space-y-3 text-neutral-muted font-mono text-xs">
+            <li>Update the worker service command:
+              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-3 text-[11px] text-[#fafafa] overflow-x-auto select-text font-mono leading-tight">command: /usr/bin/supervisord -n -c /var/www/docker/supervisor/supervisord.conf</div>
+            </li>
+            <li>Add <code class="text-primary font-semibold">healthcheck: disable: true</code> to the <code class="text-neutral-text font-semibold">worker</code>, <code class="text-neutral-text font-semibold">cron</code>, and <code class="text-neutral-text font-semibold">ws</code> services.</li>
+            <li>Recreate the containers:
+              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-2.5 text-[11px] text-[#fafafa] overflow-x-auto select-text font-mono">docker compose up -d</div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Full Diagnostics Suite -->
+    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
+      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
+        <div>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DIAG-07</span>
+          <h2 class="inline font-mono text-sm font-bold text-neutral-text">NuSaaS Diagnostics Suite</h2>
+        </div>
+        <span class="font-mono text-xs text-green-500">[Info & Utilities]</span>
+      </div>
+      
+      <div class="space-y-6 font-mono text-xs leading-relaxed">
+        
+        <!-- Health check commands -->
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1.5">// 1. CHECKING_CONTAINER_HEALTH</p>
+          <p class="text-neutral-muted mb-2">Query container statuses, check if their internal health checks are passing, and ping the API route directly from the server:</p>
+          <div class="space-y-2">
+            <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+              <pre class="p-3 text-[11px] text-[#fafafa] overflow-x-auto leading-normal"># Get docker containers status & health indicators
+docker compose ps
+
+# Check the API health endpoint directly inside the API container
+docker compose exec api curl -sf http://localhost:4000/api/health
+
+# Verify actual HTTP response headers from the API server
+docker compose exec api curl -i http://localhost:4000/api/health</pre>
+              <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log Streaming commands -->
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1.5">// 2. LIVE_LOG_STREAMING</p>
+          <p class="text-neutral-muted mb-2">Stream logs in real-time to intercept errors during database connection failures, mail queue issues, or application crashes:</p>
+          <div class="space-y-2">
+            <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+              <pre class="p-3 text-[11px] text-[#fafafa] overflow-x-auto leading-normal"># Stream logs from all running containers
+docker compose logs -f
+
+# Stream only backend API container logs
+docker compose logs -f api
+
+# Stream queue worker logs
+docker compose logs -f worker
+
+# Stream MySQL/PostgreSQL logs
+docker compose logs -f db</pre>
+              <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Database Connectivity commands -->
+        <div>
+          <p class="text-neutral-muted uppercase tracking-wider mb-1.5">// 3. CONTAINER_SHELLS_AND_DATABASE_DIAGNOSTICS</p>
+          <p class="text-neutral-muted mb-2">Access container environments directly or trigger internal database pingers to verify connection integrity:</p>
+          <div class="space-y-2">
+            <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
+              <pre class="p-3 text-[11px] text-[#fafafa] overflow-x-auto leading-normal"># Open an interactive shell inside the API container
+docker compose exec -it api bash
+
+# Monitor DB connection stats in Laravel
+docker compose exec api php artisan db:monitor
+
+# Directly test DB connection PDO instantiation
+docker compose exec api php artisan tinker --execute="DB::connection()->getPdo();"
+
+# Get current system stats (RAM/CPU usage per container)
+docker stats --no-stream</pre>
+              <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="border-t border-neutral-border bg-neutral-bg">
+  <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between text-xs font-mono text-neutral-muted">
+    <span>&copy; 2026 NUSAAS</span>
+    <nav class="flex items-center gap-5">
+      <a href="index.html" class="hover:text-primary transition-colors">Installer Home</a>
+      <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="hover:text-neutral-text transition-colors">Docker Hub</a>
+      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="hover:text-neutral-text transition-colors">Compose File</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+function copyCode(btn) {
+  var codeBlock = btn.previousElementSibling;
+  var text = codeBlock.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = '[Copied!]';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

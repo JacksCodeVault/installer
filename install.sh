@@ -221,8 +221,8 @@ echo -e "${BOLD}━━━ Application Configuration ━━━━━━━━━�
 echo
 
 prompt "App Name (your business name)"  "MyERP"      APP_NAME
-prompt "API URL  (e.g. https://api.erp.example.com)"  "" APP_URL
-prompt "Frontend URL (e.g. https://app.erp.example.com)" "" FRONTEND_URL
+prompt "API URL  (e.g. https://api.example.com)"  "" APP_URL
+prompt "Frontend URL (e.g. https://app.example.com)" "" FRONTEND_URL
 prompt "App timezone (e.g. Africa/Nairobi)" "Africa/Nairobi" APP_TIMEZONE
 prompt "Default currency (e.g. KES)"     "KES"        APP_CURRENCY
 prompt "Support email"                   "support@${APP_URL#*://}" SUPPORT_EMAIL
@@ -445,7 +445,7 @@ APP_FALLBACK_LOCALE=en
 SUPPORT_EMAIL=${SUPPORT_EMAIL}
 SUPPORT_WEBSITE=${FRONTEND_URL}
 PRIVACY_EMAIL=${SUPPORT_EMAIL}
-CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*$#
+CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*\$#
 TRUSTED_PROXIES=*
 BCRYPT_ROUNDS=12
 
