@@ -227,6 +227,23 @@ prompt "App timezone (e.g. Africa/Nairobi)" "Africa/Nairobi" APP_TIMEZONE
 prompt "Default currency (e.g. KES)"     "KES"        APP_CURRENCY
 prompt "Support email"                   "support@${APP_URL#*://}" SUPPORT_EMAIL
 
+# Normalize URLs to ensure they contain a scheme (default to https://, or http:// for localhost/127.0.0.1)
+if [[ ! "$APP_URL" =~ ^https?:// ]]; then
+  if [[ "$APP_URL" == *"localhost"* || "$APP_URL" == *"127.0.0.1"* ]]; then
+    APP_URL="http://${APP_URL}"
+  else
+    APP_URL="https://${APP_URL}"
+  fi
+fi
+
+if [[ ! "$FRONTEND_URL" =~ ^https?:// ]]; then
+  if [[ "$FRONTEND_URL" == *"localhost"* || "$FRONTEND_URL" == *"127.0.0.1"* ]]; then
+    FRONTEND_URL="http://${FRONTEND_URL}"
+  else
+    FRONTEND_URL="https://${FRONTEND_URL}"
+  fi
+fi
+
 echo
 echo -e "${BOLD}━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
@@ -428,7 +445,7 @@ APP_FALLBACK_LOCALE=en
 SUPPORT_EMAIL=${SUPPORT_EMAIL}
 SUPPORT_WEBSITE=${FRONTEND_URL}
 PRIVACY_EMAIL=${SUPPORT_EMAIL}
-CORS_ALLOWED_ORIGIN_PATTERNS=#^${FRONTEND_URL//./\\.}\$#
+CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*$#
 TRUSTED_PROXIES=*
 BCRYPT_ROUNDS=12
 
@@ -439,6 +456,7 @@ DB_PORT=${DB_PORT}
 DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
+MYSQL_ATTR_SSL_VERIFY_SERVER_CERT=false
 
 # Redis (managed by this compose stack)
 REDIS_HOST=cache
