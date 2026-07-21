@@ -3,12 +3,8 @@
 # NuSaaS Installer
 # =============================================================================
 # Usage:
-#   curl -fsSL https://get.nusaas.com/install.sh -o install.sh && bash install.sh
-#   — or —
+#   curl -fsSL https://get.nusaas.com/install.sh -o install.sh
 #   bash install.sh
-#
-# To pre-configure without prompts, set environment variables before running:
-#   APP_URL=https://api.example.com DB_PASSWORD=secret bash install.sh
 #
 # Requirements:
 #   - Docker (https://docs.docker.com/get-docker/)
@@ -37,122 +33,42 @@ set -euo pipefail
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
+NUSAAS_VERSION="${NUSAAS_VERSION:-latest}"
+COMPOSE_FILE="docker-compose.yml"
+COMPOSE_URL="https://get.nusaas.com/${COMPOSE_FILE}"
+WATCHTOWER_POLL_INTERVAL="${WATCHTOWER_POLL_INTERVAL:-86400}"
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 info()    { echo -e "${CYAN}${BOLD}[NuSaaS]${RESET} $*"; }
 success() { echo -e "${GREEN}${BOLD}[  OK  ]${RESET} $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}[ WARN ]${RESET} $*"; }
-error()   { echo "[ERROR] $*"; echo "[ERROR] $*" >&2; }
+error()   { echo -e "${RED}${BOLD}[ERROR ]${RESET} $*" >&2; }
 die()     { error "$*"; exit 1; }
-
-run_with_spinner() {
-  local msg="$1"
-  shift
-  info "${msg}..."
-  
-  local hide_cursor=""
-  local show_cursor=""
-  if tput civis >/dev/null 2>&1 && tput cnorm >/dev/null 2>&1; then
-    hide_cursor=$(tput civis)
-    show_cursor=$(tput cnorm)
-  fi
-  
-  local log_file
-  log_file=$(mktemp 2>/dev/null || echo "/tmp/nusaas-install-$RANDOM.log")
-  
-  # Run command in background
-  "$@" >"${log_file}" 2>&1 &
-  local pid=$!
-  
-  # Hide cursor
-  echo -ne "${hide_cursor}"
-  
-  local delay=0.1
-  local spinstr='|/-\\'
-  while kill -0 "$pid" 2>/dev/null; do
-    local temp=${spinstr#?}
-    printf " [%c] " "$spinstr"
-    spinstr=$temp${spinstr%"$temp"}
-    sleep $delay
-    printf "\b\b\b\b\b"
-  done
-  
-  # Restore cursor
-  echo -ne "${show_cursor}"
-  printf "     \b\b\b\b\b"
-  
-  if wait "$pid"; then
-    success "${msg} complete."
-    rm -f "${log_file}"
-  else
-    echo -e "\n${RED}${BOLD}[ ERROR ]${RESET} ${msg} failed."
-    cat "${log_file}" >&2
-    rm -f "${log_file}"
-    exit 1
-  fi
-}
-
-# ── Detect interactive mode ──────────────────────────────────────────────────
-if [[ -t 0 ]]; then
-  INTERACTIVE=true
-else
-  INTERACTIVE=false
-  warn "Non-interactive mode detected (stdin is not a terminal)."
-  warn "Set environment variables to pre-configure values, or run 'bash install.sh' for interactive setup."
-fi
-
-NUSAAS_VERSION="${NUSAAS_VERSION:-latest}"
-COMPOSE_FILE="docker-compose.yml"
-ENV_EXAMPLE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/.env.selfhosted"
 
 prompt() {
   local label="$1" default="${2:-}" var_name="$3"
-  if [[ "$INTERACTIVE" == "false" ]]; then
-    if [[ -n "${!var_name:-}" ]]; then
-      info "Using $var_name from environment"
-      return
-    fi
-    eval "${var_name}='${default}'"
-    info "Using default for $var_name: ${default:-<empty>}"
-    return
-  fi
   if [[ -n "$default" ]]; then
     read -rp "$(echo -e "${BOLD}${label}${RESET} [${default}]: ")" input
-    eval "${var_name}='${input:-$default}'"
+    printf -v "${var_name}" '%s' "${input:-$default}"
   else
     read -rp "$(echo -e "${BOLD}${label}${RESET}: ")" input
-    eval "${var_name}='${input}'"
+    printf -v "${var_name}" '%s' "${input}"
   fi
 }
 
 prompt_secret() {
   local label="$1" var_name="$2"
-  if [[ "$INTERACTIVE" == "false" ]]; then
-    if [[ -n "${!var_name:-}" ]]; then
-      info "Using $var_name from environment"
-      return
-    fi
-    eval "${var_name}=''"
-    info "Skipping $var_name (set ${var_name}=... to pre-configure)"
-    return
-  fi
   read -rsp "$(echo -e "${BOLD}${label}${RESET}: ")" input
   echo
-  eval "${var_name}='${input}'"
+  printf -v "${var_name}" '%s' "${input}"
 }
 
-noninteractive_read() {
-  local var_name="$1" default="${2:-}"
-  if [[ "$INTERACTIVE" == "false" ]]; then
-    if [[ -n "${!var_name:-}" ]]; then
-      info "Using $var_name from environment"
-      return
-    fi
-    eval "${var_name}='${default}'"
-    info "Using default for $var_name: ${default:-<empty>}"
-    return
-  fi
-  read -rp "$3" input
-  eval "${var_name}='${input:-$default}'"
+dotenv_quote() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//\$/\\\$}"
+  printf '"%s"' "$value"
 }
 
 gen_key() {
@@ -185,29 +101,24 @@ echo
 # ── 1. System requirements ────────────────────────────────────────────────────
 info "Checking system requirements..."
 
-info "  docker ..."
-command -v docker >/dev/null 2>&1 || die "Docker is not installed. Visit https://docs.docker.com/get-docker/"
+command -v docker &>/dev/null    || die "Docker is not installed. Visit https://docs.docker.com/get-docker/"
+command -v openssl &>/dev/null   || die "openssl is required but not found."
 
-info "  openssl ..."
-command -v openssl >/dev/null 2>&1 || die "openssl is required but not found."
-
-info "  docker compose ..."
 # Docker Compose v2 (plugin) or v1 (standalone)
-if docker compose version >/dev/null 2>&1; then
+if docker compose version &>/dev/null 2>&1; then
   COMPOSE_CMD="docker compose"
-elif docker-compose --version >/dev/null 2>&1; then
+elif command -v docker-compose &>/dev/null; then
   COMPOSE_CMD="docker-compose"
 else
-  die "Docker Compose is not installed. Install it from https://docs.docker.com/compose/install/"
+  die "Docker Compose is not installed. Visit https://docs.docker.com/compose/install/"
 fi
 
-DOCKER_VERSION=$(docker --version 2>/dev/null | awk '{print $3}' | tr -d ',') || true
+DOCKER_VERSION=$(docker --version | awk '{print $3}' | tr -d ',')
 success "Docker ${DOCKER_VERSION} detected"
 success "Docker Compose detected (${COMPOSE_CMD})"
 
 # Ensure Docker daemon is running
-info "  docker daemon ..."
-docker info >/dev/null 2>&1 || die "Docker daemon is not running. Start Docker and try again."
+docker info &>/dev/null || die "Docker daemon is not running. Start Docker and try again."
 
 # ── 2. Working directory ──────────────────────────────────────────────────────
 INSTALL_DIR="${INSTALL_DIR:-$(pwd)/nusaas}"
@@ -215,14 +126,27 @@ info "Install directory: ${INSTALL_DIR}"
 mkdir -p "${INSTALL_DIR}" "${INSTALL_DIR}/web"
 cd "${INSTALL_DIR}"
 
-# ── 3. Interactive configuration ──────────────────────────────────────────────
+# ── 3. Download compose file ──────────────────────────────────────────────────
+if [[ ! -f "${COMPOSE_FILE}" ]]; then
+  info "Downloading ${COMPOSE_FILE}..."
+  curl -fsSL "${COMPOSE_URL}" -o "${COMPOSE_FILE}" \
+    || die "Failed to download ${COMPOSE_FILE}. Check your internet connection."
+  success "Downloaded ${COMPOSE_FILE}"
+else
+  warn "${COMPOSE_FILE} already exists — skipping download."
+fi
+
+# ── 4. Interactive configuration ──────────────────────────────────────────────
 echo
 echo -e "${BOLD}━━━ Application Configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
 
 prompt "App Name (your business name)"  "MyERP"      APP_NAME
-prompt "API URL  (e.g. https://api.example.com)"  "" APP_URL
-prompt "Frontend URL (e.g. https://app.example.com)" "" FRONTEND_URL
+prompt "API URL  (e.g. https://api.erp.example.com)"  "" APP_URL
+prompt "Frontend URL (e.g. https://app.erp.example.com)" "" FRONTEND_URL
+prompt "Documentation URL (e.g. https://docs.erp.example.com)" "" DOCS_URL
+[[ -n "${APP_URL}" && -n "${FRONTEND_URL}" && -n "${DOCS_URL}" ]] \
+  || die "API, frontend, and documentation URLs are required."
 prompt "App timezone (e.g. Africa/Nairobi)" "Africa/Nairobi" APP_TIMEZONE
 prompt "Default currency (e.g. KES)"     "KES"        APP_CURRENCY
 prompt "Support email"                   "support@${APP_URL#*://}" SUPPORT_EMAIL
@@ -244,68 +168,38 @@ if [[ ! "$FRONTEND_URL" =~ ^https?:// ]]; then
   fi
 fi
 
+if [[ ! "$DOCS_URL" =~ ^https?:// ]]; then
+  if [[ "$DOCS_URL" == *"localhost"* || "$DOCS_URL" == *"127.0.0.1"* ]]; then
+    DOCS_URL="http://${DOCS_URL}"
+  else
+    DOCS_URL="https://${DOCS_URL}"
+  fi
+fi
+
+# Dots must be escaped because this value is consumed as a regular expression.
+CORS_FRONTEND_URL="${FRONTEND_URL//./\\.}"
+
 echo
 echo -e "${BOLD}━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
-warn "The compose file includes a built-in database container."
-warn "You can use it (simpler) or connect to your own external database."
-echo
-noninteractive_read USE_BUILTIN_DB "y" "$(echo -e "${BOLD}Use built-in database container? [Y/n]: ${RESET}")"
-if [[ "${USE_BUILTIN_DB,,}" != "n" ]]; then
-  # Built-in DB — auto-configure for Docker network
-  echo
-  echo -e "  ${BOLD}Select database engine:${RESET}"
-  echo -e "    1) MySQL 8.0+"
-  echo -e "    2) MariaDB 10.6+"
-  echo -e "    3) PostgreSQL 15+"
-  echo
-  noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Database engine [1]: ${RESET}")"
-  case "${DB_TYPE_CHOICE:-1}" in
-    2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
-    3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
-    *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
-  esac
-  DB_HOST="nusaas-db"
-  DB_PORT="${DEFAULT_DB_PORT}"
-  DB_DATABASE="nusaas"
-  DB_USERNAME="nusaas"
-  prompt_secret "Database password (set a strong password)" DB_PASSWORD
-else
-  # External database — prompt for connection details
-  echo
-  echo -e "  ${BOLD}Select database engine:${RESET}"
-  echo -e "    1) MySQL 8.0+"
-  echo -e "    2) MariaDB 10.6+"
-  echo -e "    3) PostgreSQL 15+"
-  echo
-  noninteractive_read DB_TYPE_CHOICE "1" "$(echo -e "${BOLD}Database engine [1]: ${RESET}")"
-  case "${DB_TYPE_CHOICE:-1}" in
-    2) DB_CONNECTION="mariadb"; DEFAULT_DB_PORT="3306" ;;
-    3) DB_CONNECTION="pgsql";   DEFAULT_DB_PORT="5432"  ;;
-    *) DB_CONNECTION="mysql";   DEFAULT_DB_PORT="3306"  ;;
-  esac
-  DB_HOST="nusaas-db"
-  DB_PORT="${DEFAULT_DB_PORT}"
-  DB_DATABASE="nusaas"
-  DB_USERNAME="nusaas"
-  prompt_secret "Database password (set a strong password)" DB_PASSWORD
-fi
+info "The public compose stack includes a private MySQL 8 container."
+DB_CONNECTION="mysql"
+DB_HOST="db"
+DB_PORT="3306"
+prompt "DB name"     "nusaas" DB_DATABASE
+prompt "DB username (do not use root)" "nusaas" DB_USERNAME
+[[ "${DB_USERNAME}" != "root" ]] || die "DB username must not be root."
+prompt_secret "DB password" DB_PASSWORD
+[[ -n "${DB_PASSWORD}" ]] || die "DB password cannot be empty."
+prompt_secret "DB root password (use a different value)" DB_ROOT_PASSWORD
+[[ -n "${DB_ROOT_PASSWORD}" ]] || die "DB root password cannot be empty."
 
-# ── 4. Download compose file ──────────────────────────────────────────────────
-COMPOSE_FILE="docker-compose.yml"
-COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/${COMPOSE_FILE}"
-if [[ "${DB_CONNECTION}" == "pgsql" ]]; then
-  COMPOSE_FILE="docker-compose.pgsql.yml"
-  COMPOSE_URL="https://raw.githubusercontent.com/JacksCodeVault/installer/main/docker-compose.pgsql.yml"
-fi
-if [[ ! -f "${COMPOSE_FILE}" ]]; then
-  info "Downloading ${COMPOSE_FILE}..."
-  curl -fsSL "${COMPOSE_URL}" -o "${COMPOSE_FILE}" \
-    || die "Failed to download ${COMPOSE_FILE}. Check your internet connection."
-  success "Downloaded ${COMPOSE_FILE}"
-else
-  warn "${COMPOSE_FILE} already exists — skipping download."
-fi
+echo
+echo -e "${BOLD}━━━ Initial Administrator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo
+prompt "Initial admin email" "admin@${FRONTEND_URL#*://}" INITIAL_ADMIN_EMAIL
+prompt_secret "Initial admin password" INITIAL_ADMIN_PASSWORD
+[[ -n "${INITIAL_ADMIN_PASSWORD}" ]] || die "Initial admin password cannot be empty."
 
 echo
 echo -e "${BOLD}━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -315,6 +209,12 @@ prompt "SMTP port"       "587"               MAIL_PORT
 prompt "SMTP username"   ""                  MAIL_USERNAME
 prompt_secret "SMTP password" MAIL_PASSWORD
 prompt "Mail from address" "noreply@${APP_URL#*://}" MAIL_FROM_ADDRESS
+
+if [[ "${MAIL_PORT}" == "465" ]]; then
+  MAIL_SCHEME="smtps"
+else
+  MAIL_SCHEME="null"
+fi
 
 echo
 echo -e "${BOLD}━━━ Meilisearch ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -335,7 +235,7 @@ warn "Skip this section if you don't want users to log in with Google."
 warn "To enable it later, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env."
 warn "Setup guide: https://console.cloud.google.com → APIs & Services → Credentials"
 echo
-noninteractive_read ENABLE_GOOGLE "n" "$(echo -e "${BOLD}Enable Google social login? [y/N]: ${RESET}")"
+read -rp "$(echo -e "${BOLD}Enable Google social login? [y/N]: ${RESET}")" ENABLE_GOOGLE
 if [[ "${ENABLE_GOOGLE,,}" == "y" ]]; then
   prompt "Google Client ID"     "" GOOGLE_CLIENT_ID
   prompt "Google Client Secret" "" GOOGLE_CLIENT_SECRET
@@ -355,61 +255,35 @@ echo
 warn "Skip this section if you don't need browser push notifications."
 warn "Full setup guide: docs/firebase-setup.md"
 echo
-noninteractive_read ENABLE_FIREBASE "n" "$(echo -e "${BOLD}Enable Firebase push notifications? [y/N]: ${RESET}")"
+read -rp "$(echo -e "${BOLD}Enable Firebase push notifications? [y/N]: ${RESET}")" ENABLE_FIREBASE
 if [[ "${ENABLE_FIREBASE,,}" == "y" ]]; then
   warn "Place your Firebase service account JSON at: ${INSTALL_DIR}/firebase/service-account.json"
-  warn "Then restart after setup: docker compose -f ${COMPOSE_FILE} restart backend queue"
+  warn "Then restart after setup: docker compose -f ${COMPOSE_FILE} restart api worker"
   mkdir -p "${INSTALL_DIR}/firebase"
   FIREBASE_CREDENTIALS_PATH="firebase/service-account.json"
+  prompt "Firebase API key" "" VITE_FIREBASE_API_KEY
+  prompt "Firebase auth domain" "" VITE_FIREBASE_AUTH_DOMAIN
+  prompt "Firebase project ID" "" VITE_FIREBASE_PROJECT_ID
+  prompt "Firebase storage bucket" "" VITE_FIREBASE_STORAGE_BUCKET
+  prompt "Firebase messaging sender ID" "" VITE_FIREBASE_MESSAGING_SENDER_ID
+  prompt "Firebase app ID" "" VITE_FIREBASE_APP_ID
+  prompt "Firebase VAPID key" "" VITE_FIREBASE_VAPID_KEY
   PUSH_NOTIFICATIONS_ENABLED="true"
 else
   FIREBASE_CREDENTIALS_PATH=""
+  VITE_FIREBASE_API_KEY=""
+  VITE_FIREBASE_AUTH_DOMAIN=""
+  VITE_FIREBASE_PROJECT_ID=""
+  VITE_FIREBASE_STORAGE_BUCKET=""
+  VITE_FIREBASE_MESSAGING_SENDER_ID=""
+  VITE_FIREBASE_APP_ID=""
+  VITE_FIREBASE_VAPID_KEY=""
   PUSH_NOTIFICATIONS_ENABLED="false"
 
   info "Firebase skipped. You can enable it later — see docs/firebase-setup.md."
 fi
 
-# ── 5. Preview config ───────────────────────────────────────────────────────────
-echo
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${BOLD}  Configuration Preview${RESET}"
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo
-echo -e "  ${BOLD}Application${RESET}"
-echo -e "  ${CYAN}App Name${RESET}         ${APP_NAME}"
-echo -e "  ${CYAN}API URL${RESET}          ${APP_URL}"
-echo -e "  ${CYAN}Frontend URL${RESET}     ${FRONTEND_URL}"
-echo -e "  ${CYAN}Timezone${RESET}         ${APP_TIMEZONE}"
-echo -e "  ${CYAN}Currency${RESET}         ${APP_CURRENCY}"
-echo -e "  ${CYAN}Support Email${RESET}    ${SUPPORT_EMAIL}"
-echo
-echo -e "  ${BOLD}Database (${DB_CONNECTION})${RESET}"
-if [[ "${USE_BUILTIN_DB,,}" != "n" ]]; then
-  echo -e "  ${CYAN}Mode${RESET}            Built-in container"
-fi
-echo -e "  ${CYAN}Host${RESET}            ${DB_HOST}"
-echo -e "  ${CYAN}Port${RESET}            ${DB_PORT}"
-echo -e "  ${CYAN}Database${RESET}        ${DB_DATABASE}"
-echo -e "  ${CYAN}Username${RESET}        ${DB_USERNAME}"
-echo -e "  ${CYAN}Password${RESET}        ${DB_PASSWORD:+"******"}"
-echo
-echo -e "  ${BOLD}Mail${RESET}"
-echo -e "  ${CYAN}SMTP Host${RESET}       ${MAIL_HOST}"
-echo -e "  ${CYAN}SMTP Port${RESET}       ${MAIL_PORT}"
-echo -e "  ${CYAN}From Address${RESET}    ${MAIL_FROM_ADDRESS}"
-echo
-echo -e "  ${BOLD}Features${RESET}"
-echo -e "  ${CYAN}Google Login${RESET}    ${SOCIAL_LOGIN_ENABLED}"
-echo -e "  ${CYAN}Firebase${RESET}        ${PUSH_NOTIFICATIONS_ENABLED}"
-echo
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo
-noninteractive_read CONFIRM_CONFIG "y" "$(echo -e "Proceed with this configuration? [Y/n]: ${RESET}")"
-if [[ "${CONFIRM_CONFIG,,}" == "n" ]]; then
-  die "Installation cancelled. Edit the values above and re-run the installer."
-fi
-
-# ── 6. Generate secrets ────────────────────────────────────────────────────────
+# ── 5. Generate secrets ────────────────────────────────────────────────────────
 info "Generating cryptographic secrets..."
 
 APP_KEY=$(gen_key)
@@ -420,8 +294,15 @@ REVERB_APP_SECRET=$(gen_secret)
 
 success "Secrets generated."
 
-# ── 7. Write .env ─────────────────────────────────────────────────────
+# ── 6. Write .env ─────────────────────────────────────────────────────
 info "Writing .env..."
+
+APP_NAME_ENV=$(dotenv_quote "${APP_NAME}")
+DB_PASSWORD_ENV=$(dotenv_quote "${DB_PASSWORD}")
+DB_ROOT_PASSWORD_ENV=$(dotenv_quote "${DB_ROOT_PASSWORD}")
+MAIL_USERNAME_ENV=$(dotenv_quote "${MAIL_USERNAME}")
+MAIL_PASSWORD_ENV=$(dotenv_quote "${MAIL_PASSWORD}")
+INITIAL_ADMIN_PASSWORD_ENV=$(dotenv_quote "${INITIAL_ADMIN_PASSWORD}")
 
 cat > .env << EOF
 # =============================================================================
@@ -430,13 +311,15 @@ cat > .env << EOF
 # =============================================================================
 
 APP_DEPLOYMENT=self-hosted
-APP_NAME="${APP_NAME}"
-APP_DISPLAY_NAME="${APP_NAME}"
+APP_NAME=${APP_NAME_ENV}
+APP_DISPLAY_NAME=${APP_NAME_ENV}
 APP_ENV=production
 APP_DEBUG=false
 APP_KEY=${APP_KEY}
 APP_URL=${APP_URL}
 FRONTEND_URL=${FRONTEND_URL}
+PUBLIC_FRONTEND_URL=${FRONTEND_URL}
+WHATSAPP_CALLBACK_BASE_URL=${APP_URL}
 APP_TIMEZONE=${APP_TIMEZONE}
 APP_CURRENCY=${APP_CURRENCY}
 APP_LOCALE=en
@@ -444,8 +327,9 @@ APP_FALLBACK_LOCALE=en
 
 SUPPORT_EMAIL=${SUPPORT_EMAIL}
 SUPPORT_WEBSITE=${FRONTEND_URL}
+COMPANY_COUNTRY=KE
 PRIVACY_EMAIL=${SUPPORT_EMAIL}
-CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*\$#
+CORS_ALLOWED_ORIGIN_PATTERNS='#^${CORS_FRONTEND_URL}$#'
 TRUSTED_PROXIES=*
 BCRYPT_ROUNDS=12
 
@@ -455,7 +339,8 @@ DB_HOST=${DB_HOST}
 DB_PORT=${DB_PORT}
 DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
-DB_PASSWORD=${DB_PASSWORD}
+DB_PASSWORD=${DB_PASSWORD_ENV}
+DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD_ENV}
 MYSQL_ATTR_SSL_VERIFY_SERVER_CERT=false
 
 # Redis (managed by this compose stack)
@@ -475,7 +360,7 @@ LOG_LEVEL=error
 
 # Meilisearch (managed by this compose stack)
 SCOUT_DRIVER=meilisearch
-MEILISEARCH_HOST=http://meilisearch:7700
+MEILISEARCH_HOST=http://search:7700
 MEILISEARCH_KEY=${MEILISEARCH_KEY}
 SCOUT_QUEUE=true
 
@@ -486,14 +371,16 @@ JWT_REFRESH_TTL=20160
 
 # Mail
 MAIL_MAILER=smtp
+MAIL_SCHEME=${MAIL_SCHEME}
 MAIL_HOST=${MAIL_HOST}
 MAIL_PORT=${MAIL_PORT}
-MAIL_USERNAME=${MAIL_USERNAME}
-MAIL_PASSWORD=${MAIL_PASSWORD}
-MAIL_ENCRYPTION=tls
+MAIL_USERNAME=${MAIL_USERNAME_ENV}
+MAIL_PASSWORD=${MAIL_PASSWORD_ENV}
 MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
 MAIL_FROM_NAME="\${APP_NAME}"
 MAIL_SUPPORT_ADDRESS=${SUPPORT_EMAIL}
+MAIL_BRAND_HOME_URL=${FRONTEND_URL}
+MAIL_BRAND_LOGO_URL=${APP_URL}/brand/nusaas-logo.png
 
 # WebSocket (Reverb — managed by this compose stack)
 BROADCAST_CONNECTION=reverb
@@ -504,6 +391,9 @@ REVERB_HOST=ws
 REVERB_PORT=8083
 REVERB_SCHEME=http
 
+# Auto-Updates (Watchtower)
+WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL}
+
 # Google Social Login (${SOCIAL_LOGIN_ENABLED})
 GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -512,15 +402,6 @@ GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
 # Firebase Push Notifications (${PUSH_NOTIFICATIONS_ENABLED})
 FIREBASE_CREDENTIALS_PATH=${FIREBASE_CREDENTIALS_PATH}
 
-# M-Pesa (optional)
-MPESA_CONSUMER_KEY=
-MPESA_CONSUMER_SECRET=
-MPESA_SHORT_CODE=
-MPESA_ENVIRONMENT=production
-MPESA_PASSKEY=
-MPESA_INITIATOR_NAME=
-MPESA_INITIATOR_PASSWORD=
-
 # Sentry (optional)
 SENTRY_LARAVEL_DSN=
 SENTRY_ENVIRONMENT=production
@@ -528,11 +409,23 @@ SENTRY_ENVIRONMENT=production
 # Backups
 BACKUP_FILENAME_PREFIX=nusaas-backup
 BACKUP_ADMIN_EMAIL=${SUPPORT_EMAIL}
+
+# Initial system administrator (created by migrate --seed)
+INITIAL_ADMIN_NAME="System Administrator"
+INITIAL_ADMIN_EMAIL=${INITIAL_ADMIN_EMAIL}
+INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD_ENV}
+
+# Host ports
+BACKEND_PORT=4000
+FRONTEND_PORT=4001
+DOCS_PORT=4002
+REVERB_EXTERNAL_PORT=8083
+REDIS_MAXMEMORY=512mb
 EOF
 
 success ".env written."
 
-# ── 8. Write web/.env.frontend ─────────────────────────────────────────────────
+# ── 7. Write web/.env.frontend ─────────────────────────────────────────────────
 info "Writing web/.env.frontend..."
 
 # Extract Reverb public host from APP_URL
@@ -548,7 +441,7 @@ cat > web/.env.frontend << EOF
 VITE_DEPLOYMENT=self-hosted
 
 # API
-VITE_API_URL=${APP_URL}/api
+VITE_API_URL=${APP_URL}
 VITE_API_BASE_URL=${APP_URL}
 
 # Branding
@@ -559,15 +452,29 @@ VITE_APP_DESCRIPTION="Self-hosted ERP and POS platform."
 VITE_APP_ENV=production
 VITE_SUPPORT_EMAIL=${SUPPORT_EMAIL}
 VITE_SUPPORT_WEBSITE=${FRONTEND_URL}
+VITE_LEGAL_COMPANY_NAME="${APP_NAME}"
+VITE_LEGAL_COPYRIGHT_NAME="${APP_NAME}"
+VITE_PRIVACY_EMAIL=${SUPPORT_EMAIL}
+VITE_DOCS_URL=${DOCS_URL}
 
 # Feature Flags
 VITE_BILLING_ENABLED=false
 VITE_SOCIAL_LOGIN_ENABLED=${SOCIAL_LOGIN_ENABLED}
 VITE_PUSH_NOTIFICATIONS_ENABLED=${PUSH_NOTIFICATIONS_ENABLED}
+VITE_DISABLE_RIGHT_CLICK=false
 
 # Google OAuth (when enabled)
 VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 VITE_GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+
+# Firebase browser push (when enabled)
+VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+VITE_FIREBASE_VAPID_KEY=${VITE_FIREBASE_VAPID_KEY}
 
 # WebSocket — Laravel Reverb
 VITE_REVERB_APP_KEY=${REVERB_APP_KEY}
@@ -575,72 +482,62 @@ VITE_REVERB_HOST=${REVERB_PUBLIC_HOST}
 VITE_REVERB_PORT=443
 VITE_REVERB_SCHEME=wss
 
-# eTIMS
-VITE_ETIMS_ENVIRONMENT=production
-
 # Sentry (disabled by default for self-hosted)
 VITE_ENABLE_SENTRY=false
 VITE_SENTRY_DSN=
+
+# Maps
+VITE_MAP_TILE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+VITE_MAP_ATTRIBUTION=&copy; OpenStreetMap contributors
+VITE_MAP_MAX_ZOOM=19
+VITE_MAP_EXTERNAL_LINKS=true
 EOF
 
 success "web/.env.frontend written."
 
-# ── 9. Clean stale DB volume (built-in DB only) ────────────────────────────
-if [[ "${USE_BUILTIN_DB,,}" != "n" ]] && ${COMPOSE_CMD} -f "${COMPOSE_FILE}" ps 2>/dev/null | grep -q "unhealthy"; then
-  warn "Previous DB volume may have stale credentials."
-  warn "Removing all volumes to start fresh..."
-  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" down -v 2>/dev/null || true
-  success "Stale volumes removed."
-fi
-
-# ── 10. Pull images ───────────────────────────────────────────────────────────
+# ── 8. Pull images ────────────────────────────────────────────────────────────
 echo
-run_with_spinner "Pulling NuSaaS images from Docker Hub" \
-  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
+info "Pulling NuSaaS images from Docker Hub..."
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
+success "Images pulled."
 
-# ── 11. Start services ─────────────────────────────────────────────────────────
-run_with_spinner "Starting containers" \
-  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
+# ── 9. Start services ─────────────────────────────────────────────────────────
+info "Starting services..."
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --remove-orphans
+success "Services started."
 
-# ── 12. Wait for backend ──────────────────────────────────────────────────────
-run_with_spinner "Waiting for backend to become healthy" \
-  bash -c '
-    COMPOSE_CMD="$1"
-    COMPOSE_FILE="$2"
-    max_wait=120
-    waited=0
-    until $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api curl -sf http://localhost:4000/api/health &>/dev/null; do
-      sleep 3
-      waited=$((waited + 3))
-      if [ $waited -ge $max_wait ]; then
-        exit 1
-      fi
-    done
-  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
+# ── 10. Wait for backend ──────────────────────────────────────────────────────
+info "Waiting for backend to become healthy..."
+MAX_WAIT=120
+WAITED=0
+until ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+      curl -sf http://localhost:4000/api/health &>/dev/null; do
+  sleep 3
+  WAITED=$((WAITED + 3))
+  if [[ ${WAITED} -ge ${MAX_WAIT} ]]; then
+    die "Backend did not become healthy within ${MAX_WAIT}s. Check logs: ${COMPOSE_CMD} -f ${COMPOSE_FILE} logs api"
+  fi
+  echo -n "."
+done
+echo
+success "Backend is healthy."
 
-# ── 13. Run migrations and seeders ────────────────────────────────────────────
-run_with_spinner "Running database migrations and seeding" \
-  ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api php artisan migrate --seed --force
+# ── 11. Run migrations and seeders ────────────────────────────────────────────
+info "Running database migrations and seeding core configuration..."
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+  php artisan migrate --seed --force
 
-run_with_spinner "Warming search index" \
-  bash -c '
-    COMPOSE_CMD="$1"
-    COMPOSE_FILE="$2"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan scout:sync-index-settings || true
-  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
+info "Warming search index..."
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+  php artisan scout:sync-index-settings || true
 
-run_with_spinner "Caching configurations for production" \
-  bash -c '
-    COMPOSE_CMD="$1"
-    COMPOSE_FILE="$2"
-    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan config:cache >/dev/null 2>&1 || true
-    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan route:cache >/dev/null 2>&1 || true
-    $COMPOSE_CMD -f "$COMPOSE_FILE" exec -T api php artisan event:cache >/dev/null 2>&1 || true
-  ' bash "${COMPOSE_CMD}" "${COMPOSE_FILE}"
+info "Caching config, routes, and views for production..."
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
+  php artisan optimize
 
-success "Database and services ready."
+success "Database ready."
 
-# ── 14. Done ──────────────────────────────────────────────────────────────────
+# ── 12. Done ──────────────────────────────────────────────────────────────────
 echo
 echo -e "${GREEN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${GREEN}${BOLD}  NuSaaS is running!${RESET}"
@@ -652,16 +549,13 @@ echo
 echo -e "  ${BOLD}Next steps:${RESET}"
 echo -e "  1. Point your DNS for ${BOLD}${APP_URL#*://}${RESET} and ${BOLD}${FRONTEND_URL#*://}${RESET} to this server."
 echo -e "  2. Configure a reverse proxy (Caddy/Nginx/Traefik) for TLS termination."
-echo -e "  3. Create your first admin account:"
-echo -e "     ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} exec api php artisan nusaas:create-admin${RESET}"
+echo -e "  3. Sign in with ${BOLD}${INITIAL_ADMIN_EMAIL}${RESET} and change the bootstrap password."
 echo
 echo -e "  ${BOLD}Useful commands:${RESET}"
-echo -e "  All logs       : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs -f${RESET}"
-echo -e "  API logs       : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs api${RESET}"
-echo -e "  DB logs        : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs db${RESET}"
-echo -e "  Check health   : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} exec api curl -sf http://localhost:4000/api/health${RESET}"
-echo -e "  Stop           : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} down${RESET}"
-echo -e "  Update images  : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} pull && ${COMPOSE_CMD} -f ${COMPOSE_FILE} up -d${RESET}"
+echo -e "  View logs    : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs -f${RESET}"
+echo -e "  Stop         : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} down${RESET}"
+echo -e "  Update images: ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} pull && ${COMPOSE_CMD} -f ${COMPOSE_FILE} up -d${RESET}"
 echo
 echo -e "  Support: ${CYAN}support@nusaas.com${RESET} | Docs: ${CYAN}https://nusaas.com/docs${RESET}"
+echo
 echo

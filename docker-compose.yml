@@ -5,12 +5,13 @@
 # All host dependencies have been removed for total container isolation.
 #
 # QUICK START:
-#   curl -fsSL https://get.nusaas.com/install.sh | bash
+#   curl -fsSL https://get.nusaas.com/install.sh -o install.sh && bash install.sh
 #
 # MANUAL:
-#   1. Copy .env.selfhosted → .env and fill in your values
-#   2. docker compose up -d
-#   3. docker compose exec api php artisan migrate --force
+#   1. Download .env.selfhosted as .env and .env.frontend as web/.env.frontend
+#   2. Replace every CHANGE_ME value in both files
+#   3. docker compose config && docker compose up -d
+#   4. docker compose exec api php artisan migrate --seed --force
 #
 # SUPPORT: support@nusaas.com | https://nusaas.com/docs
 # =============================================================================
@@ -55,7 +56,7 @@ services:
   worker:
     <<: *backend-common
     container_name: nusaas-worker
-    command: /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+    command: /usr/local/bin/bootstrap-runtime.sh /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
     depends_on:
       api:
         condition: service_healthy
@@ -69,7 +70,7 @@ services:
     <<: *backend-common
     container_name: nusaas-cron
     command: >
-      /bin/sh -c "while true; do
+      /usr/local/bin/bootstrap-runtime.sh /bin/sh -c "while true; do
         php artisan schedule:run --verbose --no-interaction;
         sleep 60;
       done"
@@ -83,8 +84,8 @@ services:
     <<: *backend-common
     container_name: nusaas-ws
     ports:
-      - "${REVERB_PORT:-8083}:8083"
-    command: php artisan reverb:start --host=0.0.0.0 --port=8083
+      - "${REVERB_EXTERNAL_PORT:-8083}:8083"
+    command: /usr/local/bin/bootstrap-runtime.sh php artisan reverb:start --host=0.0.0.0 --port=8083
     depends_on:
       - cache
 
@@ -105,6 +106,21 @@ services:
         condition: service_healthy
 
   # ---------------------------------------------------------------------------
+  # Documentation Portal — Docusaurus (Nginx)
+  # ---------------------------------------------------------------------------
+  docs:
+    image: ghostdev1/nusaas-docs:latest
+    container_name: nusaas-docs
+    restart: unless-stopped
+    ports:
+      - "${DOCS_PORT:-4002}:80"
+    networks:
+      - nusaas-network
+    depends_on:
+      web:
+        condition: service_started
+
+  # ---------------------------------------------------------------------------
   # Database — MySQL 8.0
   # ---------------------------------------------------------------------------
   db:
@@ -113,10 +129,10 @@ services:
     restart: unless-stopped
     command: --ssl=0
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-ghost24}
-      MYSQL_DATABASE: ${DB_DATABASE:-nusaas}
-      MYSQL_USER: ${DB_USERNAME:-nusaas}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env}
+      MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     volumes:
       - db-data:/var/lib/mysql
     networks:
@@ -158,7 +174,7 @@ services:
     restart: unless-stopped
     environment:
       - MEILI_ENV=production
-      - MEILI_MASTER_KEY=${MEILISEARCH_KEY}
+      - MEILI_MASTER_KEY=${MEILISEARCH_KEY:?Set MEILISEARCH_KEY in .env}
       - MEILI_NO_ANALYTICS=true
     volumes:
       - search-data:/meili_data
@@ -169,6 +185,21 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
+
+  # ---------------------------------------------------------------------------
+  # Auto-Updater — Watchtower
+  # ---------------------------------------------------------------------------
+  watchtower:
+    image: containrrr/watchtower
+    container_name: nusaas-updater
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL:-86400}
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+    command: nusaas-api nusaas-worker nusaas-web nusaas-cron nusaas-ws nusaas-docs
 
 # =============================================================================
 # Infrastructure

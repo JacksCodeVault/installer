@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NUSAAS — Self-Host POS &amp; Business Management</title>
-<meta name="description" content="Deploy NUSAAS on your own infrastructure. One command installs the full stack on any Linux server.">
+<meta name="description" content="Deploy the production NUSAAS self-hosted stack with Docker Compose, maintained environment templates, and an interactive installer.">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +119,7 @@
         Self-host <span class="text-primary italic">NUSAAS</span> on your own infrastructure.
       </h1>
       <p class="mt-3 text-sm sm:text-base text-neutral-muted leading-relaxed max-w-lg">
-        Open source POS, accounting, and inventory management. Total data sovereignty, no vendor lock-in.
+        Run the production NUSAAS ERP and POS stack on infrastructure you control, using maintained Docker images and configuration templates.
       </p>
     </div>
 
@@ -131,7 +131,7 @@
           <p class="font-mono text-xs text-neutral-muted uppercase mb-3 tracking-wider select-none">// QUICK_START</p>
           
           <!-- Mock Terminal Window -->
-          <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden shadow-2xl">
+          <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden">
             <!-- Terminal Header -->
             <div class="px-4 py-2.5 border-b border-neutral-border bg-neutral-surface/60 flex items-center justify-between select-none">
               <div class="flex items-center gap-1.5">
@@ -158,14 +158,12 @@
           <!-- Quick actions -->
           <div class="mt-3 flex items-center gap-4">
             <button onclick="copyCmd(this)" class="w-40 justify-center flex font-mono text-xs font-medium text-primary hover:text-accent-glow transition-colors px-3 py-1.5 border border-primary/30 rounded bg-primary/5 hover:bg-primary/10">[Copy both lines]</button>
-            <span class="font-mono text-xs text-neutral-border select-none">|</span>
-            <button onclick="copyInline(this)" class="w-48 justify-center flex font-mono text-xs font-medium text-neutral-muted hover:text-neutral-text transition-colors px-3 py-1.5 border border-neutral-border rounded hover:bg-neutral-surface">[copy one-liner]</button>
           </div>
         </div>
 
         <div class="mt-8">
           <p class="text-xs text-neutral-muted leading-relaxed font-mono select-none">
-            // The interactive installer configures environment, databases, mail services, and spins up the stack.
+            // The installer creates the backend and frontend env files, provisions MySQL, and starts the 10-service stack.
           </p>
           <div class="mt-4 flex flex-wrap gap-3">
             <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs px-3 py-2 bg-primary text-neutral-bg rounded hover:bg-accent-glow transition-colors font-medium">
@@ -183,24 +181,24 @@
         <p class="font-mono text-xs text-neutral-muted uppercase mb-4 tracking-wider select-none">// THE_STACK</p>
         <div class="bg-neutral-surface border border-neutral-border rounded-md p-5 space-y-4">
           <div class="flex gap-3">
-            <span class="font-mono text-primary select-none">01.</span>
+            <span class="font-mono text-primary select-none">app</span>
             <div>
-              <p class="text-sm font-semibold text-neutral-text font-mono">Backend API</p>
-              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">PHP 8.2 with RESTful API, task queues, and integrated scheduler.</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">Application Runtimes</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">API, React frontend, docs, queue worker, scheduler, and Reverb WebSocket server.</p>
             </div>
           </div>
           <div class="flex gap-3">
-            <span class="font-mono text-primary select-none">02.</span>
+            <span class="font-mono text-primary select-none">data</span>
             <div>
-              <p class="text-sm font-semibold text-neutral-text font-mono">Frontend Web</p>
-              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">React SPA served efficiently via Nginx containerization.</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">Private Data Services</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">MySQL 8, Redis 7, and Meilisearch on an internal Docker network with persistent volumes.</p>
             </div>
           </div>
           <div class="flex gap-3">
-            <span class="font-mono text-primary select-none">03.</span>
+            <span class="font-mono text-primary select-none">ops</span>
             <div>
-              <p class="text-sm font-semibold text-neutral-text font-mono">PostgreSQL &amp; Redis</p>
-              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">Reliable relational database paired with in-memory cache layer.</p>
+              <p class="text-sm font-semibold text-neutral-text font-mono">Operations</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">Health checks, automatic image updates, production caching, and seeded initial administration.</p>
             </div>
           </div>
         </div>
@@ -233,7 +231,7 @@
           <span class="font-mono text-xs text-primary shrink-0">[02]</span>
           <div>
             <h3 class="text-xs font-semibold text-neutral-text font-mono">Execute Wizard</h3>
-            <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Run the installer to configure databases, mail services, and cryptographic secrets.</p>
+            <p class="mt-1 text-[11px] text-neutral-muted leading-relaxed">Run the installer to configure domains, MySQL, SMTP, the first administrator, and cryptographic secrets.</p>
             <div class="mt-2 bg-[#08080a] border border-neutral-border/60 rounded px-2.5 py-1.5 font-mono text-[10px] text-zinc-400 overflow-x-auto leading-tight select-text">
               bash install.sh
             </div>
@@ -254,7 +252,7 @@
       <!-- Interactive Terminal Demo (Right) -->
       <div class="lg:col-span-3 flex flex-col">
         <p class="font-mono text-xs text-neutral-muted uppercase mb-3 tracking-wider">// SIMULATED_INSTALL</p>
-        <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden shadow-2xl flex-1 flex flex-col min-h-[350px]">
+        <div class="bg-neutral-surface border border-neutral-border rounded-md overflow-hidden flex-1 flex flex-col min-h-[350px]">
           <!-- Terminal Header -->
           <div class="px-4 py-2 border-b border-neutral-border bg-neutral-surface/60 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-1.5">
@@ -279,11 +277,11 @@
     <div class="max-w-2xl mb-8">
       <p class="font-mono text-xs text-primary mb-2 select-none">&gt; ls -lh config/</p>
       <h2 class="font-display text-2xl font-bold text-neutral-text tracking-tight">Manual Deployment Assets</h2>
-      <p class="mt-1 text-sm text-neutral-muted">Review, configure, or manually download individual infrastructure files.</p>
+      <p class="mt-1 text-sm text-neutral-muted">Manual installs require the compose file plus both backend and frontend environment templates.</p>
     </div>
     
     <!-- ls -lh styled files table -->
-    <div class="border border-neutral-border bg-neutral-surface rounded-md overflow-hidden font-mono text-xs shadow-xl">
+    <div class="border border-neutral-border bg-neutral-surface rounded-md overflow-hidden font-mono text-xs">
       <!-- Table Header -->
       <div class="grid grid-cols-12 gap-2 px-4 py-2.5 bg-neutral-surface/60 border-b border-neutral-border text-neutral-muted select-none">
         <div class="col-span-3">PERMISSIONS</div>
@@ -296,7 +294,7 @@
         <!-- Row 1 -->
         <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
           <div class="col-span-3 text-green-500">-rwxr-xr-x</div>
-          <div class="col-span-2 text-neutral-muted">~24 KB</div>
+          <div class="col-span-2 text-neutral-muted">~22 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text">install.sh</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
             <button onclick="copyCurl(this, 'install.sh')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
@@ -306,7 +304,7 @@
         <!-- Row 2 -->
         <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
           <div class="col-span-3 text-neutral-muted">-rw-r--r--</div>
-          <div class="col-span-2 text-neutral-muted">~5 KB</div>
+          <div class="col-span-2 text-neutral-muted">~7 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text">docker-compose.yml</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
             <button onclick="copyCurl(this, 'docker-compose.yml')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
@@ -316,15 +314,31 @@
         <!-- Row 3 -->
         <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
           <div class="col-span-3 text-neutral-muted">-rw-r--r--</div>
-          <div class="col-span-2 text-neutral-muted">~4 KB</div>
+          <div class="col-span-2 text-neutral-muted">~4.5 KB</div>
           <div class="col-span-4 font-semibold text-neutral-text font-mono">.env.selfhosted</div>
           <div class="col-span-3 text-right flex items-center justify-end gap-4">
             <button onclick="copyCurl(this, '.env.selfhosted')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
             <a href=".env.selfhosted" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
           </div>
         </div>
+        <!-- Row 4 -->
+        <div class="grid grid-cols-12 gap-2 px-4 py-3.5 items-center hover:bg-neutral-bg/40 transition-colors">
+          <div class="col-span-3 text-neutral-muted">-rw-r--r--</div>
+          <div class="col-span-2 text-neutral-muted">~2 KB</div>
+          <div class="col-span-4 font-semibold text-neutral-text font-mono">.env.frontend</div>
+          <div class="col-span-3 text-right flex items-center justify-end gap-4">
+            <button onclick="copyCurl(this, '.env.frontend')" class="text-primary hover:text-accent-glow transition-colors font-medium w-16 text-center">curl -O</button>
+            <a href=".env.frontend" download class="text-neutral-muted hover:text-neutral-text transition-colors font-medium">Download</a>
+          </div>
+        </div>
       </div>
     </div>
+    <div class="mt-4 bg-[#08080a] border border-neutral-border rounded-md p-4 font-mono text-[11px] text-zinc-300 overflow-x-auto leading-relaxed select-text"><span class="text-zinc-500"># Manual placement and validation</span>
+mkdir -p web
+mv .env.selfhosted .env
+mv .env.frontend web/.env.frontend
+nano .env &amp;&amp; nano web/.env.frontend
+docker compose config --quiet</div>
   </section>
 </main>
 
@@ -334,7 +348,7 @@
     <nav class="flex items-center gap-5">
       <a href="troubleshoot.html" class="hover:text-primary transition-colors">Troubleshooting Guide</a>
       <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="hover:text-neutral-text transition-colors">Docker Hub</a>
-      <a href="https://jackscodevault.github.io/installer/docker-compose.yml" target="_blank" class="hover:text-neutral-text transition-colors">Compose File</a>
+      <a href="docker-compose.yml" class="hover:text-neutral-text transition-colors">Compose File</a>
     </nav>
   </div>
 </footer>
@@ -345,17 +359,6 @@ function origin() { return window.location.origin; }
 function copyCmd(btn) {
   var o = origin();
   var text = 'curl -fsSL ' + o + '/install.sh -o install.sh\nbash install.sh';
-  navigator.clipboard.writeText(text).then(function() {
-    var orig = btn.textContent;
-    btn.textContent = '[Copied!]';
-    setTimeout(function() { btn.textContent = orig; }, 2000);
-  });
-}
-
-// Copy inline quickstart text
-function copyInline(btn) {
-  var o = origin();
-  var text = 'curl -fsSL ' + o + '/install.sh | bash';
   navigator.clipboard.writeText(text).then(function() {
     var orig = btn.textContent;
     btn.textContent = '[Copied!]';
@@ -449,14 +452,28 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'prompt-input', label: 'App Name (your business name) [MyERP]', input: 'Safari Logistics', delay: 1000 },
     { type: 'prompt-input', label: 'API URL  (e.g. https://api.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
+    { type: 'prompt-input', label: 'Documentation URL (e.g. https://docs.example.com)', input: 'https://docs.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'App timezone [Africa/Nairobi]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Default currency [KES]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Support email [support@safari.co.ke]', input: '', delay: 600 },
-    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-primary font-bold">[ WARN ]</span> The compose file includes a built-in database container.', delay: 400 },
-    { type: 'prompt-input', label: 'Use built-in database container? [Y/n]', input: 'y', delay: 800 },
-    { type: 'write', html: '  <span class="text-[#fafafa] font-bold">Select database engine:</span>\n    1) MySQL 8.0+\n    2) MariaDB 10.6+\n    3) PostgreSQL 15+\n', delay: 500 },
-    { type: 'prompt-input', label: 'Database engine [1]', input: '3', delay: 800 },
-    { type: 'prompt-input', label: 'Database password (set a strong password)', input: '••••••••', delay: 1000 },
+    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Database ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-accent-glow font-bold">[NuSaaS]</span> The public compose stack includes a private MySQL 8 container.', delay: 400 },
+    { type: 'prompt-input', label: 'DB name [nusaas]', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'DB username (do not use root) [nusaas]', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'DB password', input: '••••••••••••', delay: 800 },
+    { type: 'prompt-input', label: 'DB root password (use a different value)', input: '••••••••••••', delay: 800 },
+    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Initial Administrator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
+    { type: 'prompt-input', label: 'Initial admin email [admin@app.safari.co.ke]', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'Initial admin password', input: '••••••••••••', delay: 800 },
+    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
+    { type: 'prompt-input', label: 'SMTP host [smtp.mailgun.org]', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'SMTP port [587]', input: '', delay: 400 },
+    { type: 'prompt-input', label: 'SMTP username', input: 'postmaster@safari.co.ke', delay: 600 },
+    { type: 'prompt-input', label: 'SMTP password', input: '••••••••••••', delay: 600 },
+    { type: 'prompt-input', label: 'Mail from address [noreply@api.safari.co.ke]', input: '', delay: 500 },
+    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Meilisearch ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
+    { type: 'prompt-input', label: 'Meilisearch master key (blank to generate)', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'Enable Google social login? [y/N]', input: 'n', delay: 400 },
+    { type: 'prompt-input', label: 'Enable Firebase push notifications? [y/N]', input: 'n', delay: 400 },
     { type: 'prompt-input', label: '\nProceed with this configuration? [Y/n]', input: 'y', delay: 800 },
     { type: 'write', html: '\n<span class="text-accent-glow font-bold">[NuSaaS]</span> Generating cryptographic secrets... <span class="text-green-500">[ OK ]</span>', delay: 600 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Writing configuration files... <span class="text-green-500">[ OK ]</span>', delay: 500 },
@@ -465,10 +482,10 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'write', html: '  nusaas-web ... <span class="text-green-500">Pulling</span>', delay: 200 },
     { type: 'write', html: '<span class="text-green-500 font-bold">[  OK  ]</span> Images pulled successfully\n', delay: 600 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Starting services...', delay: 400 },
-    { type: 'write', html: '  api ... <span class="text-green-500">Running</span>\n  web ... <span class="text-green-500">Running</span>', delay: 500 },
+    { type: 'write', html: '  api · web · docs · worker · cron · ws ... <span class="text-green-500">Running</span>\n  db · cache · search · watchtower ... <span class="text-green-500">Running</span>', delay: 500 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Waiting for backend to become healthy...', delay: 300 },
     { type: 'write', html: '  ....................................... <span class="text-green-500">[ Healthy ]</span>\n', delay: 800 },
-    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Running database migrations and seeding... <span class="text-green-500">[ OK ]</span>', delay: 800 },
+    { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Running migrations, seeders, and initial admin bootstrap... <span class="text-green-500">[ OK ]</span>', delay: 800 },
     { type: 'write', html: '\n<span class="text-green-500 font-bold">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n<span class="text-green-500 font-bold">  NuSaaS is running!</span>\n<span class="text-green-500 font-bold">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>\n\n  Web Interface → <span class="text-primary font-bold underline">https://app.safari.co.ke</span>\n  API Endpoint  → <span class="text-primary font-bold underline">https://api.safari.co.ke</span>\n', delay: 8000 }
   ];
   

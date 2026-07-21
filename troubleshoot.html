@@ -132,16 +132,18 @@
         <div>
           <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
           <p class="text-neutral-muted select-text">
-            In standard bash, <code class="text-primary font-semibold">$#</code> is a special variable representing the number of script arguments. In older installers, the <code class="text-neutral-text font-semibold">.env</code> generator heredoc was unescaped, causing bash to evaluate <code class="text-primary font-semibold">$#</code> to <code class="text-primary font-semibold">0</code>. This wrote <code class="text-neutral-text font-semibold">CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*0</code> to your config, breaking regular expression matching.
+            The frontend origin does not match <code class="text-neutral-text font-semibold">CORS_ALLOWED_ORIGIN_PATTERNS</code>, or the regex begins with an unquoted <code class="text-primary font-semibold">#</code>. Dotenv treats an unquoted leading hash as a comment, leaving Laravel with no allowed browser origin.
           </p>
         </div>
 
         <div>
           <p class="text-neutral-muted uppercase tracking-wider mb-2">// IMMEDIATE_HOT_FIX</p>
-          <p class="text-neutral-muted mb-2">Run this on your server host to repair the config regex and recreate the API container with updated variables:</p>
+          <p class="text-neutral-muted mb-2">Set a quoted exact regex for your frontend origin, then recreate every backend runtime so it loads the changed environment:</p>
           <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
-            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">sed -i 's|CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*0|CORS_ALLOWED_ORIGIN_PATTERNS=#^https?://.*\$#|g' ~/docker/nusaas/.env
-docker compose up -d</pre>
+            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal"># In /opt/nusaas/.env:
+CORS_ALLOWED_ORIGIN_PATTERNS='#^https://app\.yourdomain\.com$#'
+
+docker compose up -d --force-recreate api worker cron ws</pre>
             <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
           </div>
         </div>
@@ -162,7 +164,7 @@ docker compose up -d</pre>
         <div>
           <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
           <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
-            You updated the domain settings in <code class="text-primary font-semibold">.env.frontend</code> and recreated containers, but browser developer console still shows requests targeting old domains (e.g. wss://api.olddomain.com).
+            You updated domain settings in <code class="text-primary font-semibold">web/.env.frontend</code>, but the browser still targets old API or WebSocket domains.
           </p>
         </div>
         
@@ -178,7 +180,7 @@ docker compose up -d</pre>
           <p class="text-neutral-muted uppercase tracking-wider mb-2">// SOLUTION_STEPS</p>
           <ol class="list-decimal list-inside space-y-2 text-neutral-muted font-mono text-xs">
             <li>Force recreate the containers to inject the new env values:
-              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-2.5 text-[11px] text-[#fafafa] overflow-x-auto select-text">docker compose up -d</div>
+              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-2.5 text-[11px] text-[#fafafa] overflow-x-auto select-text">docker compose up -d --force-recreate web</div>
             </li>
             <li>Test in an <strong>Incognito / Private Window</strong> (bypasses Service Worker cache).</li>
             <li>In your main window, open DevTools (<kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">F12</kbd>), navigate to the <strong>Network</strong> tab, check <strong>Disable Cache</strong>, and reload with <kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">Ctrl+F5</kbd> (Windows) or <kbd class="text-[#fafafa] font-semibold bg-neutral-border px-1 rounded">Cmd+Shift+R</kbd> (Mac).</li>
@@ -253,9 +255,10 @@ docker compose up -d</pre>
 
         <div>
           <p class="text-neutral-muted uppercase tracking-wider mb-2">// IMMEDIATE_HOT_FIX</p>
-          <p class="text-neutral-muted mb-2">Write a MariaDB client configuration directly inside the running backend container to skip SSL validation, then manually run the migration command:</p>
+          <p class="text-neutral-muted mb-2">Current backend images configure the container client correctly. Pull and recreate the API before retrying migrations:</p>
           <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
-            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose exec api sh -c "printf '[client]\nskip-ssl\n' > /etc/my.cnf"
+            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose pull api
+docker compose up -d --force-recreate api
 docker compose exec -T api php artisan migrate --seed --force</pre>
             <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
           </div>
@@ -263,48 +266,11 @@ docker compose exec -T api php artisan migrate --seed --force</pre>
       </div>
     </div>
 
-    <!-- Issue 5: Postgres Driver Missing -->
+    <!-- Issue 5: Unhealthy Containers / Worker Crash Loops -->
     <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
       <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
         <div>
-          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DRV-05</span>
-          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Relational Driver Error (PostgreSQL)</h2>
-        </div>
-        <span class="font-mono text-xs text-red-500">[Severity: High]</span>
-      </div>
-      
-      <div class="space-y-4 font-mono text-xs leading-relaxed">
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
-          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
-            could not find driver (Connection: pgsql, Host: nusaas-db, Port: 5432, Database: nusaas ...)
-          </p>
-        </div>
-        
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
-          <p class="text-neutral-muted select-text">
-            Older releases of the FrankenPHP backend base image (<code class="text-primary font-semibold">ghostdev1/nusaas-backend</code>) were compiled without the native PostgreSQL client binaries and PHP extension (<code class="text-neutral-text font-semibold">pdo_pgsql</code>).
-          </p>
-        </div>
-
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-2">// RESOLUTION</p>
-          <p class="text-neutral-muted mb-2">Pull down the latest <code class="text-neutral-text font-semibold">v1.0.4+</code> images which include compiled PostgreSQL extensions, and recreate the stack:</p>
-          <div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text">
-            <pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose pull
-docker compose up -d</pre>
-            <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Issue 6: Unhealthy Containers / Worker Crash Loops -->
-    <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
-      <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
-        <div>
-          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DOCKER-06</span>
+          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DOCKER-05</span>
           <h2 class="inline font-mono text-sm font-bold text-neutral-text">Worker Crash Loops &amp; Unhealthy Statuses</h2>
         </div>
         <span class="font-mono text-xs text-yellow-500">[Severity: Medium]</span>
@@ -388,7 +354,7 @@ docker compose logs -f api
 # Stream queue worker logs
 docker compose logs -f worker
 
-# Stream MySQL/PostgreSQL logs
+# Stream MySQL logs
 docker compose logs -f db</pre>
               <button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button>
             </div>
