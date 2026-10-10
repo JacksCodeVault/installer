@@ -1,0 +1,26 @@
+name: Validate installer
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell and site
+        run: |
+          bash -n install.sh
+          python3 tests/site-smoke.py
+          bash tests/install-smoke.sh
+      - name: Validate distributed Compose configuration
+        run: |
+          mkdir -p "$RUNNER_TEMP/nusaas/web"
+          cp docker-compose.yml "$RUNNER_TEMP/nusaas/"
+          cp .env.selfhosted "$RUNNER_TEMP/nusaas/.env"
+          cp .env.frontend "$RUNNER_TEMP/nusaas/web/.env.frontend"
+          printf '%s\n' 'app.example.com { reverse_proxy web:4001 }' > "$RUNNER_TEMP/nusaas/Caddyfile"
+          cd "$RUNNER_TEMP/nusaas"
+          docker compose config --quiet

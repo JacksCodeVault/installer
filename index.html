@@ -92,6 +92,17 @@
       display: none !important;
     }
   }
+
+  select {
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+    padding-right: 2.25rem !important;
+    background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 8 5 5 5-5'/%3E%3C/svg%3E");
+    transition: border-color .15s, box-shadow .15s;
+  }
+  select:hover { border-color: var(--color-primary, #38bdf8); }
+  select:focus { box-shadow: 0 0 0 3px rgba(56,189,248,.2); }
+  select option { background: Canvas; color: CanvasText; padding: .5rem; }
 </style>
 </head>
 <body class="font-sans antialiased bg-neutral-bg text-neutral-text">
@@ -163,7 +174,7 @@
 
         <div class="mt-8">
           <p class="text-xs text-neutral-muted leading-relaxed font-mono select-none">
-            // The installer creates the backend and frontend env files, provisions MySQL, and starts the 10-service stack.
+            // The installer creates the backend and frontend env files, provisions MySQL, and starts the [REDACTED] stack.
           </p>
           <div class="mt-4 flex flex-wrap gap-3">
             <a href="https://hub.docker.com/u/ghostdev1" target="_blank" class="font-mono text-xs px-3 py-2 bg-primary text-neutral-bg rounded hover:bg-accent-glow transition-colors font-medium">
@@ -184,7 +195,7 @@
             <span class="font-mono text-primary select-none">app</span>
             <div>
               <p class="text-sm font-semibold text-neutral-text font-mono">Application Runtimes</p>
-              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">API, React frontend, docs, queue worker, scheduler, and Reverb WebSocket server.</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">API, React frontend, queue worker, scheduler, and Reverb WebSocket server. Documentation remains managed at docs.nusaas.com.</p>
             </div>
           </div>
           <div class="flex gap-3">
@@ -198,12 +209,36 @@
             <span class="font-mono text-primary select-none">ops</span>
             <div>
               <p class="text-sm font-semibold text-neutral-text font-mono">Operations</p>
-              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">Health checks, automatic image updates, production caching, and seeded initial administration.</p>
+              <p class="text-xs text-neutral-muted mt-1 leading-relaxed">Automatic HTTPS, health checks, pinned releases, local backup tooling, and seeded initial administration.</p>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- Non-secret command builder -->
+  <section class="border-t border-neutral-border pt-16 mb-16" id="command-builder">
+    <div class="max-w-2xl mb-8">
+      <p class="font-mono text-xs text-primary mb-2">&gt; configure --guided</p>
+      <h2 class="font-display text-2xl font-bold text-neutral-text tracking-tight">Build your installation command</h2>
+      <p class="mt-2 text-sm text-neutral-muted leading-relaxed">These values are processed only in your browser. Passwords and generated secrets are never collected here; the installer requests or creates them directly on your server.</p>
+    </div>
+    <form id="install-command-form" class="grid grid-cols-1 md:grid-cols-2 gap-5" novalidate>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">Business name</span><input id="builder-name" required value="My Business" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text focus:outline-none focus:border-primary"></label>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">Platform</span><select id="builder-platform" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text"><option value="linux">Ubuntu / Debian server or desktop</option><option value="wsl">Windows with WSL2 and Docker Desktop</option></select></label>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">App domain</span><input id="builder-app-domain" required placeholder="app.example.com" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text focus:outline-none focus:border-primary"><span class="block mt-1.5">DNS must point to the server before installation.</span></label>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">API domain</span><input id="builder-api-domain" required placeholder="api.example.com" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text focus:outline-none focus:border-primary"><span class="block mt-1.5">Caddy obtains HTTPS certificates automatically.</span></label>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">Timezone</span><select id="builder-timezone" required data-default="[REDACTED]" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text focus:outline-none focus:border-primary"></select></label>
+      <label class="text-xs text-neutral-muted"><span class="block mb-2 font-medium text-neutral-text">Currency</span><input id="builder-currency" required maxlength="3" value="KES" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm uppercase text-neutral-text focus:outline-none focus:border-primary"></label>
+      <label class="text-xs text-neutral-muted md:col-span-2"><span class="block mb-2 font-medium text-neutral-text">Backup protection</span><select id="builder-backup" class="w-full h-10 rounded border border-neutral-border bg-neutral-bg px-3 text-sm text-neutral-text"><option value="local">Schedule local database + uploads backups (recommended minimum)</option><option value="later">Configure backups after installation</option></select><span class="block mt-1.5">Local backups do not protect against loss of the server or disk. Add off-server storage when available.</span></label>
+      <div class="md:col-span-2" id="builder-error" role="alert" aria-live="polite"></div>
+    </form>
+    <div class="mt-6 overflow-hidden rounded-md border border-neutral-border bg-[#08080a]">
+      <div class="flex items-center justify-between border-b border-neutral-border px-4 py-2.5"><span class="font-mono text-[10px] text-zinc-400">generated command · NuSaaS 1.0.10</span><button type="button" id="copy-generated-command" class="font-mono text-xs text-primary hover:text-accent-glow">[Copy command]</button></div>
+      <pre id="generated-command" class="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-xs leading-6 text-zinc-200"></pre>
+    </div>
+    <div id="platform-note" class="mt-3 text-xs leading-relaxed text-neutral-muted"></div>
   </section>
 
   <!-- Step Section -->
@@ -354,6 +389,19 @@ docker compose config --quiet</div>
 </footer>
 
 <script>
+var tzSelect = document.getElementById('builder-timezone');
+(function () {
+  var zones = (Intl.supportedValuesOf && Intl.supportedValuesOf('timeZone')) || ['Africa/Nairobi','Africa/Lagos','Africa/Johannesburg','Africa/Cairo','Europe/London','America/New_York','Asia/Dubai','Asia/Kolkata'];
+  if (zones.indexOf('UTC') === -1) zones = zones.concat('UTC');
+  var local = '';
+  try { local = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) {}
+  var selected = tzSelect.getAttribute('data-default');
+  tzSelect.innerHTML = zones.map(function (z) {
+    return '<option value="' + z + '"' + (z === selected ? ' selected' : '') + '>' + z.replace(/_/g, ' ') + '</option>';
+  }).join('');
+  if (zones.indexOf(selected) === -1 && local) tzSelect.value = local;
+})();
+
 function origin() { return window.location.origin; }
 
 function copyCmd(btn) {
@@ -375,6 +423,73 @@ function copyCurl(btn, file) {
     setTimeout(function() { btn.textContent = orig; }, 2000);
   });
 }
+
+
+function shellQuote(value) {
+  return "'" + String(value).replace(/'/g, "'\\''") + "'";
+}
+
+function normalizeBuilderDomain(value) {
+  var normalized = value.trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(normalized)) return '';
+  return normalized.toLowerCase();
+}
+
+function updateGeneratedCommand() {
+  var name = document.getElementById('builder-name').value.trim();
+  var appDomain = normalizeBuilderDomain(document.getElementById('builder-app-domain').value);
+  var apiDomain = normalizeBuilderDomain(document.getElementById('builder-api-domain').value);
+  var timezone = tzSelect.value;
+  var currency = document.getElementById('builder-currency').value.trim().toUpperCase();
+  var backup = document.getElementById('builder-backup').value;
+  var platform = document.getElementById('builder-platform').value;
+  var error = document.getElementById('builder-error');
+  var output = document.getElementById('generated-command');
+  var problems = [];
+  if (!name) problems.push('Enter a business name.');
+  if (!appDomain) problems.push('Enter a valid public app hostname.');
+  if (!apiDomain) problems.push('Enter a valid public API hostname.');
+  if (appDomain && apiDomain && appDomain === apiDomain) problems.push('App and API hostnames must be different.');
+  if (!/^[A-Za-z_+-]+\/[A-Za-z0-9_+\-/]+$/.test(timezone)) problems.push('Use an IANA timezone such as [REDACTED].');
+  if (!/^[A-Z]{3}$/.test(currency)) problems.push('Use a three-letter currency code.');
+  error.textContent = problems.join(' ');
+  error.className = problems.length ? 'md:col-span-2 text-xs text-red-500' : 'md:col-span-2 text-xs text-green-600';
+  if (problems.length) {
+    output.textContent = '# Complete the fields above to generate a command.';
+  } else {
+    output.textContent = [
+      'curl -fsSL ' + origin() + '/install.sh -o install.sh',
+      'bash install.sh \\',
+      '  --app-name ' + shellQuote(name) + ' \\',
+      '  --app-domain ' + shellQuote(appDomain) + ' \\',
+      '  --api-domain ' + shellQuote(apiDomain) + ' \\',
+      '  --timezone ' + shellQuote(timezone) + ' \\',
+      '  --currency ' + shellQuote(currency) + ' \\',
+      '  --backup-mode ' + shellQuote(backup) + ' \\',
+      "  --version '1.0.10'"
+    ].join('\n');
+  }
+  document.getElementById('copy-generated-command').disabled = problems.length > 0;
+  document.getElementById('platform-note').textContent = platform === 'wsl'
+    ? 'Run this inside Ubuntu on WSL2 after Docker Desktop is installed, running, and integrated with that WSL distribution. Ports 80 and 443 must be free on Windows.'
+    : 'Run this over SSH on a VPS, or in a terminal on Ubuntu/Debian. Docker Engine and Compose v2 must already be installed.';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('#install-command-form input, #install-command-form select').forEach(function(field) {
+    field.addEventListener('input', updateGeneratedCommand);
+    field.addEventListener('change', updateGeneratedCommand);
+  });
+  document.getElementById('copy-generated-command').addEventListener('click', function() {
+    var button = this;
+    navigator.clipboard.writeText(document.getElementById('generated-command').textContent).then(function() {
+      var original = button.textContent;
+      button.textContent = '[Copied!]';
+      setTimeout(function() { button.textContent = original; }, 2000);
+    });
+  });
+  updateGeneratedCommand();
+});
 
 // Terminal typewriter typing animation
 document.addEventListener('DOMContentLoaded', function() {
@@ -441,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const demoSteps = [
     { type: 'prompt', text: 'bash install.sh', delay: 1000 },
-    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : latest</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : 1.0.10</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Checking system requirements...', delay: 400 },
     { type: 'write', html: '  docker ... <span class="text-green-500 font-bold">[ OK ]</span> Docker 24.0.7 detected', delay: 500 },
     { type: 'write', html: '  openssl ... <span class="text-green-500 font-bold">[ OK ]</span> openssl detected', delay: 400 },
@@ -452,7 +567,6 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'prompt-input', label: 'App Name (your business name) [MyERP]', input: 'Safari Logistics', delay: 1000 },
     { type: 'prompt-input', label: 'API URL  (e.g. https://api.example.com)', input: 'https://api.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'Frontend URL (e.g. https://app.example.com)', input: 'https://app.safari.co.ke', delay: 1200 },
-    { type: 'prompt-input', label: 'Documentation URL (e.g. https://docs.example.com)', input: 'https://docs.safari.co.ke', delay: 1200 },
     { type: 'prompt-input', label: 'App timezone [Africa/Nairobi]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Default currency [KES]', input: '', delay: 600 },
     { type: 'prompt-input', label: 'Support email [support@safari.co.ke]', input: '', delay: 600 },
@@ -465,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'prompt-input', label: 'Initial admin email [admin@app.safari.co.ke]', input: '', delay: 500 },
     { type: 'prompt-input', label: 'Initial admin password', input: '••••••••••••', delay: 800 },
     { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
-    { type: 'prompt-input', label: 'SMTP host [smtp.mailgun.org]', input: '', delay: 500 },
+    { type: 'prompt-input', label: 'SMTP host (blank disables outgoing mail)', input: '', delay: 500 },
     { type: 'prompt-input', label: 'SMTP port [587]', input: '', delay: 400 },
     { type: 'prompt-input', label: 'SMTP username', input: 'postmaster@safari.co.ke', delay: 600 },
     { type: 'prompt-input', label: 'SMTP password', input: '••••••••••••', delay: 600 },
@@ -482,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'write', html: '  nusaas-web ... <span class="text-green-500">Pulling</span>', delay: 200 },
     { type: 'write', html: '<span class="text-green-500 font-bold">[  OK  ]</span> Images pulled successfully\n', delay: 600 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Starting services...', delay: 400 },
-    { type: 'write', html: '  api · web · docs · worker · cron · ws ... <span class="text-green-500">Running</span>\n  db · cache · search · watchtower ... <span class="text-green-500">Running</span>', delay: 500 },
+    { type: 'write', html: '  proxy · api · web · worker · cron · ws ... <span class="text-green-500">Running</span>\n  db · cache · search ... <span class="text-green-500">Running</span>', delay: 500 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Waiting for backend to become healthy...', delay: 300 },
     { type: 'write', html: '  ....................................... <span class="text-green-500">[ Healthy ]</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Running migrations, seeders, and initial admin bootstrap... <span class="text-green-500">[ OK ]</span>', delay: 800 },

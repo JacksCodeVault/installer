@@ -1,48 +1,42 @@
-# =============================================================================
-# NuSaaS — Public Distribution
-# =============================================================================
-# This file pulls pre-built, signed images from Docker Hub.
-# All host dependencies have been removed for total container isolation.
-#
-# QUICK START:
-#   curl -fsSL https://get.nusaas.com/install.sh -o install.sh && bash install.sh
-#
-# MANUAL:
-#   1. Download .env.selfhosted as .env and .env.frontend as web/.env.frontend
-#   2. Replace every CHANGE_ME value in both files
-#   3. docker compose config && docker compose up -d
-#   4. docker compose exec api php artisan migrate --seed --force
-#
-# SUPPORT: support@nusaas.com | https://nusaas.com/docs
-# =============================================================================
+# NuSaaS self-hosted stack. Documentation remains hosted at https://docs.nusaas.com.
+# Application images are pinned through NUSAAS_VERSION; updates are user initiated.
 
 x-backend-common: &backend-common
-  image: ghostdev1/nusaas-backend:latest
+  image: ghostdev1/nusaas-backend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
   restart: unless-stopped
   env_file: .env
   volumes:
     - storage-data:/var/www/storage
-    # Mount your Firebase service account JSON (if push notifications are enabled).
     - ./firebase:/var/www/firebase:ro
-  networks:
-    - nusaas-network
+  networks: [nusaas-network]
 
 services:
-  # ---------------------------------------------------------------------------
-  # REST API — FrankenPHP (Caddy + PHP 8.2)
-  # ---------------------------------------------------------------------------
+  proxy:
+    image: caddy:2.11.7-alpine
+    container_name: nusaas-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [nusaas-network]
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+
   api:
     <<: *backend-common
     container_name: nusaas-api
-    ports:
-      - "${BACKEND_PORT:-4000}:4000"
     depends_on:
-      db:
-        condition: service_healthy
-      cache:
-        condition: service_healthy
-      search:
-        condition: service_healthy
+      db: { condition: service_healthy }
+      cache: { condition: service_healthy }
+      search: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
       interval: 30s
@@ -50,22 +44,14 @@ services:
       start_period: 45s
       retries: 3
 
-  # ---------------------------------------------------------------------------
-  # Background Worker — Supervisor manages Laravel queue workers
-  # ---------------------------------------------------------------------------
   worker:
     <<: *backend-common
     container_name: nusaas-worker
     command: /usr/local/bin/bootstrap-runtime.sh /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
     depends_on:
-      api:
-        condition: service_healthy
-      cache:
-        condition: service_healthy
+      api: { condition: service_healthy }
+      cache: { condition: service_healthy }
 
-  # ---------------------------------------------------------------------------
-  # Task Scheduler — Runs php artisan schedule:run every 60 seconds
-  # ---------------------------------------------------------------------------
   cron:
     <<: *backend-common
     container_name: nusaas-cron
@@ -74,57 +60,25 @@ services:
         php artisan schedule:run --verbose --no-interaction;
         sleep 60;
       done"
-    depends_on:
-      - cache
+    depends_on: [cache]
 
-  # ---------------------------------------------------------------------------
-  # WebSocket Server — Laravel Reverb
-  # ---------------------------------------------------------------------------
   ws:
     <<: *backend-common
     container_name: nusaas-ws
-    ports:
-      - "${REVERB_EXTERNAL_PORT:-8083}:8083"
     command: /usr/local/bin/bootstrap-runtime.sh php artisan reverb:start --host=0.0.0.0 --port=8083
-    depends_on:
-      - cache
+    depends_on: [cache]
 
-  # ---------------------------------------------------------------------------
-  # Frontend Web App — React SPA served by Nginx
-  # ---------------------------------------------------------------------------
   web:
-    image: ghostdev1/nusaas-frontend:latest
+    image: ghostdev1/nusaas-frontend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
     container_name: nusaas-web
     restart: unless-stopped
     env_file: web/.env.frontend
-    ports:
-      - "${FRONTEND_PORT:-4001}:4001"
-    networks:
-      - nusaas-network
+    networks: [nusaas-network]
     depends_on:
-      api:
-        condition: service_healthy
+      api: { condition: service_healthy }
 
-  # ---------------------------------------------------------------------------
-  # Documentation Portal — Docusaurus (Nginx)
-  # ---------------------------------------------------------------------------
-  docs:
-    image: ghostdev1/nusaas-docs:latest
-    container_name: nusaas-docs
-    restart: unless-stopped
-    ports:
-      - "${DOCS_PORT:-4002}:80"
-    networks:
-      - nusaas-network
-    depends_on:
-      web:
-        condition: service_started
-
-  # ---------------------------------------------------------------------------
-  # Database — MySQL 8.0
-  # ---------------------------------------------------------------------------
   db:
-    image: mysql:8.0
+    image: mysql:8.0.46
     container_name: nusaas-db
     restart: unless-stopped
     command: --ssl=0
@@ -133,83 +87,50 @@ services:
       MYSQL_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env}
       MYSQL_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}
       MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
-    volumes:
-      - db-data:/var/lib/mysql
-    networks:
-      - nusaas-network
+    volumes: [db-data:/var/lib/mysql]
+    networks: [nusaas-network]
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ---------------------------------------------------------------------------
-  # Cache & Queue Broker — Redis 7
-  # ---------------------------------------------------------------------------
   cache:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     container_name: nusaas-cache
     restart: unless-stopped
-    command: >
-      redis-server
-        --appendonly yes
-        --maxmemory ${REDIS_MAXMEMORY:-512mb}
-        --maxmemory-policy allkeys-lru
-    volumes:
-      - cache-data:/data
-    networks:
-      - nusaas-network
+    command: redis-server --appendonly yes --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru
+    volumes: [cache-data:/data]
+    networks: [nusaas-network]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 15s
       timeout: 5s
       retries: 3
 
-  # ---------------------------------------------------------------------------
-  # Search Engine — Meilisearch
-  # ---------------------------------------------------------------------------
   search:
-    image: getmeili/meilisearch:v1.12
-    container_name: nusaas-meilisearch
+    image: getmeili/[REDACTED]:v1.12
+    container_name: nusaas-[REDACTED]
     restart: unless-stopped
     environment:
-      - MEILI_ENV=production
-      - MEILI_MASTER_KEY=${MEILISEARCH_KEY:?Set MEILISEARCH_KEY in .env}
-      - MEILI_NO_ANALYTICS=true
-    volumes:
-      - search-data:/meili_data
-    networks:
-      - nusaas-network
+      MEILI_ENV: "[REDACTED]"
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?Set MEILISEARCH_KEY in .env}
+      MEILI_NO_ANALYTICS: "true"
+    volumes: [search-data:/meili_data]
+    networks: [nusaas-network]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
       interval: 15s
       timeout: 5s
       retries: 3
 
-  # ---------------------------------------------------------------------------
-  # Auto-Updater — Watchtower
-  # ---------------------------------------------------------------------------
-  watchtower:
-    image: containrrr/watchtower
-    container_name: nusaas-updater
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL:-86400}
-      - WATCHTOWER_INCLUDE_RESTARTING=true
-    command: nusaas-api nusaas-worker nusaas-web nusaas-cron nusaas-ws nusaas-docs
-
-# =============================================================================
-# Infrastructure
-# =============================================================================
 networks:
-  nusaas-network:
-    driver: bridge
+  nusaas-network: { driver: bridge }
 
 volumes:
   db-data:
   cache-data:
   storage-data:
   search-data:
+  caddy-data:
+  caddy-config:

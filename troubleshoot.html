@@ -266,45 +266,20 @@ docker compose exec -T api php artisan migrate --seed --force</pre>
       </div>
     </div>
 
-    <!-- Issue 5: Unhealthy Containers / Worker Crash Loops -->
+    <!-- Issue 5: Automatic TLS -->
     <div class="border border-neutral-border bg-neutral-surface rounded-md p-6">
       <div class="flex items-start justify-between flex-wrap gap-4 mb-4 border-b border-neutral-border pb-4 select-none">
-        <div>
-          <span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">DOCKER-05</span>
-          <h2 class="inline font-mono text-sm font-bold text-neutral-text">Worker Crash Loops &amp; Unhealthy Statuses</h2>
-        </div>
+        <div><span class="font-mono text-xs text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded mr-2">TLS-05</span><h2 class="inline font-mono text-sm font-bold text-neutral-text">Automatic HTTPS Certificate Fails</h2></div>
         <span class="font-mono text-xs text-yellow-500">[Severity: Medium]</span>
       </div>
-      
       <div class="space-y-4 font-mono text-xs leading-relaxed">
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p>
-          <p class="text-[#fafafa] select-text bg-[#08080a] p-3 border border-neutral-border/50 rounded text-[11px] overflow-x-auto leading-tight">
-            nusaas-worker   Restarting (2) 59 seconds ago<br>nusaas-ws       Up 30 minutes (unhealthy)<br>nusaas-cron     Up 30 minutes (unhealthy)
-          </p>
-        </div>
-        
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p>
-          <p class="text-neutral-muted select-text">
-            1. The worker container command runs supervisord on a config located at <code class="text-primary font-semibold">/etc/supervisor/conf.d/supervisord.conf</code> which does not exist (the correct path inside the container is <code class="text-neutral-text font-semibold">/var/www/docker/supervisor/supervisord.conf</code>).<br>
-            2. The <code class="text-primary font-semibold">cron</code> and <code class="text-primary font-semibold">ws</code> containers inherit the image-level healthcheck on port 4000. Since they do not run a web server, their health checks fail even though they are running properly.
-          </p>
-        </div>
-
-        <div>
-          <p class="text-neutral-muted uppercase tracking-wider mb-2">// REMEDY</p>
-          <p class="text-neutral-muted mb-2">Modify the service configurations in your <code class="text-neutral-text font-semibold">docker-compose.yml</code>:</p>
-          <ol class="list-decimal list-inside space-y-3 text-neutral-muted font-mono text-xs">
-            <li>Update the worker service command:
-              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-3 text-[11px] text-[#fafafa] overflow-x-auto select-text font-mono leading-tight">command: /usr/bin/supervisord -n -c /var/www/docker/supervisor/supervisord.conf</div>
-            </li>
-            <li>Add <code class="text-primary font-semibold">healthcheck: disable: true</code> to the <code class="text-neutral-text font-semibold">worker</code>, <code class="text-neutral-text font-semibold">cron</code>, and <code class="text-neutral-text font-semibold">ws</code> services.</li>
-            <li>Recreate the containers:
-              <div class="mt-1 bg-[#08080a] border border-neutral-border/60 rounded p-2.5 text-[11px] text-[#fafafa] overflow-x-auto select-text font-mono">docker compose up -d</div>
-            </li>
-          </ol>
-        </div>
+        <div><p class="text-neutral-muted uppercase tracking-wider mb-1">// SYMPTOM</p><p class="text-neutral-muted">The proxy runs, but the app or API hostname has no valid certificate.</p></div>
+        <div><p class="text-neutral-muted uppercase tracking-wider mb-1">// ROOT_CAUSE</p><p class="text-neutral-muted">DNS does not point to this host, a cloud or host firewall blocks 80/443, or another service owns those ports. On WSL2, the conflicting listener may be a Windows process.</p></div>
+        <div><p class="text-neutral-muted uppercase tracking-wider mb-2">// DIAGNOSIS</p><div class="relative bg-[#08080a] border border-neutral-border/60 rounded overflow-hidden select-text"><pre class="p-4 text-[11px] text-[#fafafa] overflow-x-auto leading-normal">docker compose ps
+docker compose logs --since=10m proxy
+ss -ltn '( sport = :80 or sport = :443 )'
+# Replace with your public API hostname:
+curl -I https://api.example.com/api/health</pre><button onclick="copyCode(this)" class="absolute top-3 right-3 font-mono text-[10px] text-primary hover:text-accent-glow transition-colors px-2 py-1 border border-primary/20 rounded bg-primary/5 hover:bg-primary/10">[Copy]</button></div></div>
       </div>
     </div>
 
