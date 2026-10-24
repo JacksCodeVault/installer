@@ -5,6 +5,12 @@ x-backend-common: &backend-common
   image: ghostdev1/nusaas-backend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
   restart: unless-stopped
   env_file: .env
+  environment:
+    APP_DEPLOYMENT: self-hosted
+    BILLING_ENABLED: "false"
+    PLATFORM_ADMIN_ENABLED: "false"
+    WHATSAPP_HOSTING_CHECKOUT_ENABLED: "false"
+    WHATSAPP_HOSTING_LIVE_PLAN_CREATION_ENABLED: "false"
   volumes:
     - storage-data:/var/www/storage
     - ./firebase:/var/www/firebase:ro
@@ -19,6 +25,10 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    environment:
+      APP_URL: ${APP_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      REVERB_PUBLIC_URL: ${REVERB_PUBLIC_URL:-https://ws.example.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
@@ -47,7 +57,7 @@ services:
   worker:
     <<: *backend-common
     container_name: nusaas-worker
-    command: /usr/local/bin/bootstrap-runtime.sh /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+    command: /usr/local/bin/bootstrap-runtime.sh /usr/bin/supervisord -n -c /var/www/docker/supervisor/supervisord.conf
     depends_on:
       api: { condition: service_healthy }
       cache: { condition: service_healthy }
@@ -60,13 +70,17 @@ services:
         php artisan schedule:run --verbose --no-interaction;
         sleep 60;
       done"
-    depends_on: [cache]
+    depends_on:
+      api: { condition: service_healthy }
+      cache: { condition: service_healthy }
 
   ws:
     <<: *backend-common
     container_name: nusaas-ws
     command: /usr/local/bin/bootstrap-runtime.sh php artisan reverb:start --host=0.0.0.0 --port=8083
-    depends_on: [cache]
+    depends_on:
+      api: { condition: service_healthy }
+      cache: { condition: service_healthy }
 
   web:
     image: ghostdev1/nusaas-frontend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
@@ -99,7 +113,7 @@ services:
     image: redis:7.4.11-alpine
     container_name: nusaas-cache
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy noeviction
     volumes: [cache-data:/data]
     networks: [nusaas-network]
     healthcheck:
@@ -109,11 +123,11 @@ services:
       retries: 3
 
   search:
-    image: getmeili/[REDACTED]:v1.12
-    container_name: nusaas-[REDACTED]
+    image: getmeili/meilisearch:v1.12
+    container_name: nusaas-meilisearch
     restart: unless-stopped
     environment:
-      MEILI_ENV: "[REDACTED]"
+      MEILI_ENV: "production"
       MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?Set MEILISEARCH_KEY in .env}
       MEILI_NO_ANALYTICS: "true"
     volumes: [search-data:/meili_data]

@@ -1,0 +1,48 @@
+# Optional operator-owned gateway. Use a separate private .env.evolution file.
+services:
+  evolution:
+    image: ${EVOLUTION_IMAGE:?Choose a reviewed Evolution release digest}
+    restart: unless-stopped
+    env_file: .env.evolution
+    environment:
+      SERVER_URL: ${WHATSAPP_SELF_HOSTED_URL:?Set your public HTTPS gateway origin}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${EVOLUTION_DB_PASSWORD:?Set a URL-safe gateway database password}@evolution-db:5432/evolution
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution-cache:6379/0
+      TELEMETRY_ENABLED: "false"
+    volumes: [evolution-sessions:/evolution/instances]
+    networks: [nusaas-network]
+    depends_on:
+      evolution-db: {condition: service_healthy}
+      evolution-cache: {condition: service_healthy}
+  evolution-db:
+    image: ${EVOLUTION_POSTGRES_IMAGE:?Choose a reviewed PostgreSQL release digest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${EVOLUTION_DB_PASSWORD:?Set a URL-safe gateway database password}
+    volumes: [evolution-db:/var/lib/postgresql/data]
+    networks: [nusaas-network]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  evolution-cache:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    volumes: [evolution-cache:/data]
+    networks: [nusaas-network]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  evolution-sessions:
+  evolution-db:
+  evolution-cache:

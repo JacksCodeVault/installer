@@ -1,0 +1,8 @@
+{$FRONTEND_URL} {
+    reverse_proxy web:4001
+}
+{$APP_URL} {
+    @reverb path /app/*
+    reverse_proxy @reverb ws:8083
+    reverse_proxy api:4000
+}

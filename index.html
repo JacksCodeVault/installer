@@ -235,7 +235,7 @@
       <div class="md:col-span-2" id="builder-error" role="alert" aria-live="polite"></div>
     </form>
     <div class="mt-6 overflow-hidden rounded-md border border-neutral-border bg-[#08080a]">
-      <div class="flex items-center justify-between border-b border-neutral-border px-4 py-2.5"><span class="font-mono text-[10px] text-zinc-400">generated command · NuSaaS 1.0.10</span><button type="button" id="copy-generated-command" class="font-mono text-xs text-primary hover:text-accent-glow">[Copy command]</button></div>
+      <div class="flex items-center justify-between border-b border-neutral-border px-4 py-2.5"><span class="font-mono text-[10px] text-zinc-400">generated command · NuSaaS 1.0.11</span><button type="button" id="copy-generated-command" class="font-mono text-xs text-primary hover:text-accent-glow">[Copy command]</button></div>
       <pre id="generated-command" class="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-xs leading-6 text-zinc-200"></pre>
     </div>
     <div id="platform-note" class="mt-3 text-xs leading-relaxed text-neutral-muted"></div>
@@ -312,7 +312,7 @@
     <div class="max-w-2xl mb-8">
       <p class="font-mono text-xs text-primary mb-2 select-none">&gt; ls -lh config/</p>
       <h2 class="font-display text-2xl font-bold text-neutral-text tracking-tight">Manual Deployment Assets</h2>
-      <p class="mt-1 text-sm text-neutral-muted">Manual installs require the compose file plus both backend and frontend environment templates.</p>
+      <p class="mt-1 text-sm text-neutral-muted">Manual installs require Compose, both environment templates and Caddy routing. The revised image-only package excludes the private console and NuSaaS billing.</p>
     </div>
     
     <!-- ls -lh styled files table -->
@@ -372,8 +372,10 @@
 mkdir -p web
 mv .env.selfhosted .env
 mv .env.frontend web/.env.frontend
-nano .env &amp;&amp; nano web/.env.frontend
+cp Caddyfile.example Caddyfile
+nano .env &amp;&amp; nano web/.env.frontend &amp;&amp; nano Caddyfile
 docker compose config --quiet</div>
+    <p class="mt-3 text-sm text-neutral-muted">Manual routing: <a href="Caddyfile.example" download>Caddyfile example</a>. Optional operator-managed services: <a href="docker-compose.cloudflare.yml" download>Cloudflare Tunnel overlay</a>, <a href="docker-compose.evolution.yml" download>Evolution overlay</a>, <a href=".env.evolution.example" download>gateway environment template</a>. Configure your own credentials and reviewed image versions before use. Register your business owner and complete email verification/onboarding after installation.</p>
   </section>
 </main>
 
@@ -466,7 +468,7 @@ function updateGeneratedCommand() {
       '  --timezone ' + shellQuote(timezone) + ' \\',
       '  --currency ' + shellQuote(currency) + ' \\',
       '  --backup-mode ' + shellQuote(backup) + ' \\',
-      "  --version '1.0.10'"
+      "  --version '1.0.11'"
     ].join('\n');
   }
   document.getElementById('copy-generated-command').disabled = problems.length > 0;
@@ -556,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const demoSteps = [
     { type: 'prompt', text: 'bash install.sh', delay: 1000 },
-    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : 1.0.10</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : 1.0.11</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Checking system requirements...', delay: 400 },
     { type: 'write', html: '  docker ... <span class="text-green-500 font-bold">[ OK ]</span> Docker 24.0.7 detected', delay: 500 },
     { type: 'write', html: '  openssl ... <span class="text-green-500 font-bold">[ OK ]</span> openssl detected', delay: 400 },
@@ -575,9 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
     { type: 'prompt-input', label: 'DB username (do not use root) [nusaas]', input: '', delay: 500 },
     { type: 'prompt-input', label: 'DB password', input: '••••••••••••', delay: 800 },
     { type: 'prompt-input', label: 'DB root password (use a different value)', input: '••••••••••••', delay: 800 },
-    { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Initial Administrator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
-    { type: 'prompt-input', label: 'Initial admin email [admin@app.safari.co.ke]', input: '', delay: 500 },
-    { type: 'prompt-input', label: 'Initial admin password', input: '••••••••••••', delay: 800 },
     { type: 'write', html: '\n<span class="text-[#fafafa] font-bold">━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>', delay: 400 },
     { type: 'prompt-input', label: 'SMTP host (blank disables outgoing mail)', input: '', delay: 500 },
     { type: 'prompt-input', label: 'SMTP port [587]', input: '', delay: 400 },

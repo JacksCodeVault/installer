@@ -48,8 +48,6 @@ cat > "$TMP/answers" <<'ANSWERS'
 test$pass!123
 root$pass!234
 
-admin$pass!345
-
 
 
 
@@ -66,6 +64,9 @@ p=Path(sys.argv[1]); root=p/'instance'; backend=(root/'.env').read_text(); front
 assert resolved['db']['environment']['MYSQL_PASSWORD'].replace('$$','$') == 'test$pass!123'
 assert "CORS_ALLOWED_ORIGIN_PATTERNS='#^https://app\\.test\\.example$#'" in backend
 assert 'NUSAAS_VERSION=1.0.10' in backend
+assert 'INITIAL_ADMIN_EMAIL=""' in backend
+assert 'Register your business owner account' in log
+assert 'RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-}"' in (root/'scripts/backup.sh').read_text()
 assert 'VITE_API_URL="https://api.test.example"' in frontend
 assert 'VITE_DOCS_URL=https://docs.nusaas.com' in frontend
 assert r'VITE_APP_NAME="Test \"Store\""' in frontend

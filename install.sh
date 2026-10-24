@@ -33,7 +33,7 @@ umask 077 # Keep generated credentials private, even if the process exits early.
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
-NUSAAS_VERSION="${NUSAAS_VERSION:-1.0.10}"
+NUSAAS_VERSION="${NUSAAS_VERSION:-1.0.11}"
 APP_NAME="${APP_NAME:-}"
 APP_URL="${APP_URL:-}"
 FRONTEND_URL="${FRONTEND_URL:-}"
@@ -272,10 +272,9 @@ prompt_secret "DB root password (use a different value)" DB_ROOT_PASSWORD
 echo
 echo -e "${BOLD}━━━ Initial Administrator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
-prompt "Initial admin email" "admin@${FRONTEND_DOMAIN}" INITIAL_ADMIN_EMAIL
-valid_email "$INITIAL_ADMIN_EMAIL" || die "Enter a valid initial administrator email address."
-prompt_secret "Initial admin password" INITIAL_ADMIN_PASSWORD
-[[ ${#INITIAL_ADMIN_PASSWORD} -ge 12 ]] || die "Initial administrator password must contain at least 12 characters."
+# The business owner registers and completes onboarding in the ERP.
+INITIAL_ADMIN_EMAIL=""
+INITIAL_ADMIN_PASSWORD=""
 
 echo
 echo -e "${BOLD}━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -403,14 +402,17 @@ set -euo pipefail
 umask 077
 cd "$(dirname "$0")/.."
 BACKUP_DIR="${BACKUP_DIR:-$PWD/backups}"
-RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
+RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-}"
 STAMP=$(date -u +%Y%m%d_%H%M%S)
 mkdir -p "$BACKUP_DIR"
-docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump -u"$MYSQL_USER" "$MYSQL_DATABASE"' | gzip > "$BACKUP_DIR/database-$STAMP.sql.gz"
+docker compose exec -T db sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump --single-transaction -u"$MYSQL_USER" "$MYSQL_DATABASE"' | gzip > "$BACKUP_DIR/database-$STAMP.sql.gz"
 docker compose exec -T api tar -C /var/www/storage -czf - . > "$BACKUP_DIR/storage-$STAMP.tar.gz"
 gzip -t "$BACKUP_DIR/database-$STAMP.sql.gz"
 tar -tzf "$BACKUP_DIR/storage-$STAMP.tar.gz" >/dev/null
-find "$BACKUP_DIR" -type f \( -name 'database-*.sql.gz' -o -name 'storage-*.tar.gz' \) -mtime "+$RETENTION_DAYS" -delete
+if [[ -n "$RETENTION_DAYS" ]]; then
+  [[ "$RETENTION_DAYS" =~ ^[1-9][0-9]*$ ]] || { echo "BACKUP_RETENTION_DAYS must be a positive integer" >&2; exit 2; }
+  find "$BACKUP_DIR" -type f \( -name 'database-*.sql.gz' -o -name 'storage-*.tar.gz' \) -mtime "+$RETENTION_DAYS" -delete
+fi
 printf 'Backup completed: %s\n' "$STAMP"
 BACKUP
 chmod 700 scripts/backup.sh
@@ -467,6 +469,12 @@ cat > .env << EOF
 # =============================================================================
 
 APP_DEPLOYMENT=self-hosted
+BILLING_ENABLED=false
+PLATFORM_ADMIN_ENABLED=false
+WHATSAPP_HOSTING_CHECKOUT_ENABLED=false
+WHATSAPP_HOSTING_LIVE_PLAN_CREATION_ENABLED=false
+WHATSAPP_EVOLUTION_ENABLED=false
+WHATSAPP_SELF_HOSTED_URL=
 APP_NAME=${APP_NAME_ENV}
 APP_DISPLAY_NAME=${APP_NAME_ENV}
 APP_ENV=production
@@ -715,7 +723,7 @@ echo -e "  API Endpoint  → ${CYAN}${APP_URL}${RESET}"
 echo
 echo -e "  ${BOLD}Next steps:${RESET}"
 echo -e "  1. Caddy manages HTTPS for ${BOLD}${API_DOMAIN}${RESET} and ${BOLD}${FRONTEND_DOMAIN}${RESET}."
-echo -e "  2. Sign in with ${BOLD}${INITIAL_ADMIN_EMAIL}${RESET} and change the bootstrap password."
+echo -e "  2. Register your business owner account, verify its email and complete onboarding."
 echo -e "  3. Documentation remains managed at ${BOLD}https://docs.nusaas.com${RESET}."
 echo
 echo -e "  ${BOLD}Useful commands:${RESET}"

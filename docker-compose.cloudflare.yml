@@ -1,0 +1,17 @@
+# Optional ingress: docker compose -f docker-compose.yml -f docker-compose.cloudflare.yml up -d
+# Configure a remotely-managed tunnel in YOUR Cloudflare account; no DNS is created here.
+services:
+  proxy:
+    profiles: [local-tls]
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:?Set a reviewed Cloudflare image tag or digest}
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token-file /run/secrets/tunnel_token
+    secrets: [tunnel_token]
+    networks: [nusaas-network]
+    depends_on:
+      api: {condition: service_healthy}
+      web: {condition: service_started}
+secrets:
+  tunnel_token:
+    file: ./secrets/cloudflared-token
