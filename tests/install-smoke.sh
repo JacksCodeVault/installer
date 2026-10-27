@@ -64,7 +64,11 @@ p=Path(sys.argv[1]); root=p/'instance'; backend=(root/'.env').read_text(); front
 assert resolved['db']['environment']['MYSQL_PASSWORD'].replace('$$','$') == 'test$pass!123'
 assert "CORS_ALLOWED_ORIGIN_PATTERNS='#^https://app\\.test\\.example$#'" in backend
 assert 'NUSAAS_VERSION=1.0.10' in backend
-assert 'INITIAL_ADMIN_EMAIL=""' in backend
+assert 'INITIAL_ADMIN_' not in backend
+assert 'ETIMS_PRODUCTION_ENABLED=false' in backend
+assert 'ETIMS_APPROVED_PRODUCTION_TENANTS=\n' in backend
+for forbidden in ('PLATFORM_', 'WHATSAPP_HOSTING_', 'MPESA_CONSUMER_SECRET', 'KRA_COMMUNICATION_KEY'):
+    assert not any(line.startswith(forbidden) for line in backend.splitlines())
 assert 'Register your business owner account' in log
 assert 'RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-}"' in (root/'scripts/backup.sh').read_text()
 assert 'VITE_API_URL="https://api.test.example"' in frontend
@@ -94,5 +98,18 @@ unset INSTALLER_CURL_FAIL
 export INSTALL_DIR="$TMP/busy-port" TEST_BUSY_PORT=1
 if bash install.sh --app-name Test --api-domain api.test.example --app-domain app.test.example --skip-dns-check </dev/null > "$TMP/busy-port.log" 2>&1; then exit 1; fi
 grep -q 'Port 80 is already in use' "$TMP/busy-port.log"
+test ! -e "$INSTALL_DIR/.env"
+# A copied managed stack or private application image must not be accepted.
+unset TEST_BUSY_PORT
+cp docker-compose.yml "$TMP/cloud-compose.yml"
+sed -i '/^services:/a\  console:\n    image: private/console:example' "$TMP/cloud-compose.yml"
+export INSTALL_DIR="$TMP/cloud-stack" INSTALLER_COMPOSE_SOURCE="$TMP/cloud-compose.yml"
+if bash install.sh --app-name Test --api-domain api.test.example --app-domain app.test.example --skip-dns-check </dev/null > "$TMP/cloud-stack.log" 2>&1; then exit 1; fi
+grep -q 'outside the self-hosted ERP stack' "$TMP/cloud-stack.log"
+test ! -e "$INSTALL_DIR/.env"
+sed 's|ghostdev1/nusaas-backend:|private/nusaas-backend:|' docker-compose.yml > "$TMP/private-image-compose.yml"
+export INSTALL_DIR="$TMP/private-image" INSTALLER_COMPOSE_SOURCE="$TMP/private-image-compose.yml"
+if bash install.sh --app-name Test --api-domain api.test.example --app-domain app.test.example --skip-dns-check </dev/null > "$TMP/private-image.log" 2>&1; then exit 1; fi
+grep -q 'published self-hosted backend/frontend images' "$TMP/private-image.log"
 test ! -e "$INSTALL_DIR/.env"
 echo 'Installer smoke checks passed'

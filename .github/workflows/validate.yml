@@ -14,6 +14,7 @@ jobs:
         run: |
           bash -n install.sh
           python3 tests/site-smoke.py
+          python3 tests/selfhost-boundary.py
           bash tests/install-smoke.sh
       - name: Validate distributed Compose configuration
         run: |

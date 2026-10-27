@@ -21,3 +21,8 @@ assert 'nusaas-backend:${NUSAAS_VERSION' in compose
 assert 'nusaas-frontend:${NUSAAS_VERSION' in compose
 assert 'caddy:2.11.7-alpine' in compose
 print('Installer site checks passed')
+
+assert 'id="business-integrations"' in html
+assert 'Launch Console' not in html
+assert 'https://docs.nusaas.com/settings/kra-etims' in html
+assert 'https://docs.nusaas.com/settings/mpesa' in html

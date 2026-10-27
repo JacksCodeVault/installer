@@ -9,6 +9,7 @@ Run validation before publishing:
 ```bash
 bash -n install.sh
 python3 tests/site-smoke.py
+python3 tests/selfhost-boundary.py
 bash tests/install-smoke.sh
 ```
 
@@ -22,3 +23,26 @@ The revised images exclude the private console, NuSaaS subscription/trial billin
 Optional files: `docker-compose.cloudflare.yml`, `docker-compose.evolution.yml`, `.env.evolution.example` and `Caddyfile.example`. Use your own Cloudflare account and scoped gateway credentials. All application image versions and optional infrastructure image digests must be selected before startup. The base update script does not automatically discover overlays; adapt it before operating a custom stack.
 
 Operator guides: https://docs.nusaas.com/self-hosting/system-requirements (use the guides matching your selected release).
+
+
+## Business integrations and environment boundary
+
+The public environment templates contain operator-owned runtime configuration.
+Do not copy the managed-cloud environment, merchant keys, staff enrollment,
+subscription plans or hosted gateway credentials into this repository. Cloud
+features are hard-disabled by the public image/Compose; they are not installer
+options. The installer does not create an internal administrator account.
+
+M-Pesa credentials and KRA taxpayer/device details are entered in the ERP.
+OSCU production transmission defaults off. Only the installation operator can
+explicitly allow its own approved workspace IDs after the applicable KRA process.
+No payment, KRA initialization or gateway registration runs during installation.
+
+The current published images remain 1.0.11. The queued eTIMS product setup and
+new fiscal-receipt flows require a newer published image release. Do not bump
+VERSION or advertise the newer workflows as installed until matching artifacts
+have been built, tested and published. Documentation and environment changes do
+not upgrade the application image.
+
+Guides: https://docs.nusaas.com/settings/kra-etims and
+https://docs.nusaas.com/settings/mpesa.

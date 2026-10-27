@@ -209,9 +209,13 @@ fi
 for service in proxy api web worker cron ws db cache search; do
   grep -Eq "^  ${service}:" "${COMPOSE_FILE}" || die "Downloaded compose file is missing the ${service} service."
 done
-if grep -Eq 'nusaas-docs|^[[:space:]]+docs:' "${COMPOSE_FILE}"; then
-  die "This compose file incorrectly includes managed documentation. Download the current self-hosted compose file."
+if grep -Eq 'nusaas-docs|^[[:space:]]+(docs|console|platform|watchtower):' "${COMPOSE_FILE}"; then
+  die "This compose file includes services outside the self-hosted ERP stack. Download the current self-hosted compose file."
 fi
+
+for image in nusaas-backend nusaas-frontend; do
+  grep -Fq "ghostdev1/${image}:\${NUSAAS_VERSION" "${COMPOSE_FILE}" || die "Use the published self-hosted backend/frontend images in the base Compose file."
+done
 
 # ── 4. Interactive configuration ──────────────────────────────────────────────
 echo
@@ -270,11 +274,7 @@ prompt_secret "DB root password (use a different value)" DB_ROOT_PASSWORD
 [[ "${DB_PASSWORD}" != "${DB_ROOT_PASSWORD}" ]] || die "Database user and root passwords must differ."
 
 echo
-echo -e "${BOLD}━━━ Initial Administrator ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo
-# The business owner registers and completes onboarding in the ERP.
-INITIAL_ADMIN_EMAIL=""
-INITIAL_ADMIN_PASSWORD=""
+info "Register the business owner in the ERP after installation."
 
 echo
 echo -e "${BOLD}━━━ Mail ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
@@ -445,7 +445,6 @@ DB_PASSWORD_ENV=$(dotenv_quote "${DB_PASSWORD}")
 DB_ROOT_PASSWORD_ENV=$(dotenv_quote "${DB_ROOT_PASSWORD}")
 MAIL_USERNAME_ENV=$(dotenv_quote "${MAIL_USERNAME}")
 MAIL_PASSWORD_ENV=$(dotenv_quote "${MAIL_PASSWORD}")
-INITIAL_ADMIN_PASSWORD_ENV=$(dotenv_quote "${INITIAL_ADMIN_PASSWORD}")
 APP_URL_ENV=$(dotenv_quote "${APP_URL}")
 FRONTEND_URL_ENV=$(dotenv_quote "${FRONTEND_URL}")
 APP_TIMEZONE_ENV=$(dotenv_quote "${APP_TIMEZONE}")
@@ -455,7 +454,6 @@ DB_USERNAME_ENV=$(dotenv_quote "${DB_USERNAME}")
 MAIL_HOST_ENV=$(dotenv_quote "${MAIL_HOST}")
 GOOGLE_REDIRECT_URI_ENV=$(dotenv_quote "${GOOGLE_REDIRECT_URI}")
 SUPPORT_EMAIL_ENV=$(dotenv_quote "${SUPPORT_EMAIL}")
-INITIAL_ADMIN_EMAIL_ENV=$(dotenv_quote "${INITIAL_ADMIN_EMAIL}")
 MAIL_FROM_ADDRESS_ENV=$(dotenv_quote "${MAIL_FROM_ADDRESS}")
 GOOGLE_CLIENT_ID_ENV=$(dotenv_quote "${GOOGLE_CLIENT_ID}")
 GOOGLE_CLIENT_SECRET_ENV=$(dotenv_quote "${GOOGLE_CLIENT_SECRET}")
@@ -470,11 +468,15 @@ cat > .env << EOF
 
 APP_DEPLOYMENT=self-hosted
 BILLING_ENABLED=false
-PLATFORM_ADMIN_ENABLED=false
-WHATSAPP_HOSTING_CHECKOUT_ENABLED=false
-WHATSAPP_HOSTING_LIVE_PLAN_CREATION_ENABLED=false
 WHATSAPP_EVOLUTION_ENABLED=false
 WHATSAPP_SELF_HOSTED_URL=
+WHATSAPP_EVOLUTION_NATIVE_BUTTONS=false
+WHATSAPP_EVOLUTION_NATIVE_LISTS=false
+
+# Optional customer-owned KRA OSCU integration. Configure sandbox in ERP Settings.
+# Leave production off until the business has completed its KRA approval process.
+ETIMS_PRODUCTION_ENABLED=false
+ETIMS_APPROVED_PRODUCTION_TENANTS=
 APP_NAME=${APP_NAME_ENV}
 APP_DISPLAY_NAME=${APP_NAME_ENV}
 APP_ENV=production
@@ -571,10 +573,7 @@ SENTRY_ENVIRONMENT=production
 BACKUP_FILENAME_PREFIX=nusaas-backup
 BACKUP_ADMIN_EMAIL=${SUPPORT_EMAIL_ENV}
 
-# Initial system administrator (created by migrate --seed)
-INITIAL_ADMIN_NAME="System Administrator"
-INITIAL_ADMIN_EMAIL=${INITIAL_ADMIN_EMAIL_ENV}
-INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD_ENV}
+# Business owner registration is completed through ERP onboarding.
 
 # Pinned application release, backup state, and runtime limits
 NUSAAS_VERSION=${NUSAAS_VERSION}
@@ -683,9 +682,9 @@ echo
 success "Backend is healthy."
 
 # ── 11. Run migrations and seeders ────────────────────────────────────────────
-info "Running database migrations and seeding core configuration..."
+info "Seeding core configuration for this new installation (startup has applied migrations)..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
-  php artisan migrate --seed --force
+  php artisan db:seed --force
 
 info "Warming search index..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" exec -T api \
@@ -725,6 +724,9 @@ echo -e "  ${BOLD}Next steps:${RESET}"
 echo -e "  1. Caddy manages HTTPS for ${BOLD}${API_DOMAIN}${RESET} and ${BOLD}${FRONTEND_DOMAIN}${RESET}."
 echo -e "  2. Register your business owner account, verify its email and complete onboarding."
 echo -e "  3. Documentation remains managed at ${BOLD}https://docs.nusaas.com${RESET}."
+echo -e "  4. Configure your own M-Pesa account in Settings → Payment Methods → M-Pesa."
+echo -e "  5. For KRA OSCU setup and release prerequisites: https://docs.nusaas.com/settings/kra-etims"
+info "Integrations are not activated by installation. Provider credentials stay in ERP settings."
 echo
 echo -e "  ${BOLD}Useful commands:${RESET}"
 echo -e "  View logs    : ${CYAN}${COMPOSE_CMD} -f ${COMPOSE_FILE} logs -f${RESET}"
