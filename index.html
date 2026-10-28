@@ -235,7 +235,7 @@
       <div class="md:col-span-2" id="builder-error" role="alert" aria-live="polite"></div>
     </form>
     <div class="mt-6 overflow-hidden rounded-md border border-neutral-border bg-[#08080a]">
-      <div class="flex items-center justify-between border-b border-neutral-border px-4 py-2.5"><span class="font-mono text-[10px] text-zinc-400">generated command · NuSaaS 1.0.11</span><button type="button" id="copy-generated-command" class="font-mono text-xs text-primary hover:text-accent-glow">[Copy command]</button></div>
+      <div class="flex items-center justify-between border-b border-neutral-border px-4 py-2.5"><span class="font-mono text-[10px] text-zinc-400">generated command · NuSaaS 1.0.12</span><button type="button" id="copy-generated-command" class="font-mono text-xs text-primary hover:text-accent-glow">[Copy command]</button></div>
       <pre id="generated-command" class="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-xs leading-6 text-zinc-200"></pre>
     </div>
     <div id="platform-note" class="mt-3 text-xs leading-relaxed text-neutral-muted"></div>
@@ -315,7 +315,7 @@
       <div><h3 class="font-semibold text-neutral-text">M-Pesa</h3><p class="mt-2 text-neutral-muted">Save your Daraja credentials in ERP payment settings, verify HTTPS callbacks and enable the payment method for each sales channel.</p><a class="inline-block mt-2 text-primary" href="https://docs.nusaas.com/settings/mpesa">M-Pesa setup guide</a></div>
       <div><h3 class="font-semibold text-neutral-text">KRA eTIMS / OSCU</h3><p class="mt-2 text-neutral-muted">Use your business registration and device. Begin in sandbox; production needs your KRA approval and explicit operator authorization. NuSaaS does not provide managed eTIMS.</p><a class="inline-block mt-2 text-primary" href="https://docs.nusaas.com/settings/kra-etims">KRA eTIMS setup guide</a></div>
     </div>
-    <p class="mt-4 text-xs text-neutral-muted">The installer stays pinned to published image version 1.0.11. The newer queued product setup and fiscal-receipt workflows require a newer published image release; changing these templates does not upgrade image contents.</p>
+    <p class="mt-4 text-xs text-neutral-muted">Self-hosted distribution is temporarily restricted. Images require an authorized Docker Hub account. Run docker login on your server before installation. Version 1.0.12 is the existing image release; the latest cloud updates are not included.</p>
   </section>
 
   <section class="border-t border-neutral-border pt-16">
@@ -478,7 +478,7 @@ function updateGeneratedCommand() {
       '  --timezone ' + shellQuote(timezone) + ' \\',
       '  --currency ' + shellQuote(currency) + ' \\',
       '  --backup-mode ' + shellQuote(backup) + ' \\',
-      "  --version '1.0.11'"
+      "  --version '1.0.12'"
     ].join('\n');
   }
   document.getElementById('copy-generated-command').disabled = problems.length > 0;
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const demoSteps = [
     { type: 'prompt', text: 'bash install.sh', delay: 1000 },
-    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : 1.0.11</span>\n', delay: 800 },
+    { type: 'write', html: '<span class="text-primary font-bold">  _   _ _   _ ____    _    _    ____</span>\n<span class="text-primary font-bold"> | \\ | | | | / ___|  / \\  / \\  / ___|</span>\n<span class="text-primary font-bold"> |  \\| | | | \\___ \\ / _ \\/ _ \\ \\___ \\</span>\n<span class="text-primary font-bold"> | |\\  | |_| |___) / ___ \\ ___ \\ ___) |</span>\n<span class="text-primary font-bold"> |_| \\_|\\___/|____/_/   \\_\\_/ \\_\\____/</span>\n\n <span class="text-zinc-400">ERP & POS Infrastructure for East Africa</span>\n <span class="text-zinc-400">Version : 1.0.12</span>\n', delay: 800 },
     { type: 'write', html: '<span class="text-accent-glow font-bold">[NuSaaS]</span> Checking system requirements...', delay: 400 },
     { type: 'write', html: '  docker ... <span class="text-green-500 font-bold">[ OK ]</span> Docker 24.0.7 detected', delay: 500 },
     { type: 'write', html: '  openssl ... <span class="text-green-500 font-bold">[ OK ]</span> openssl detected', delay: 400 },

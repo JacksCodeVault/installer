@@ -75,7 +75,7 @@ assert 'VITE_API_URL="https://api.test.example"' in frontend
 assert 'VITE_DOCS_URL=https://docs.nusaas.com' in frontend
 assert r'VITE_APP_NAME="Test \"Store\""' in frontend
 assert 'nusaas-docs' not in compose and '\n  docs:' not in compose
-assert 'nusaas-backend:${NUSAAS_VERSION' in compose and 'nusaas-frontend:${NUSAAS_VERSION' in compose
+assert 'nusaas-backend:backend-${NUSAAS_VERSION' in compose and 'nusaas-backend:frontend-${NUSAAS_VERSION' in compose
 assert 'api.test.example' in (root/'Caddyfile').read_text()
 assert (root/'scripts/backup.sh').exists() and (root/'scripts/update.sh').exists()
 assert list((root/'backups').glob('database-*.sql.gz'))
@@ -110,6 +110,6 @@ test ! -e "$INSTALL_DIR/.env"
 sed 's|ghostdev1/nusaas-backend:|private/nusaas-backend:|' docker-compose.yml > "$TMP/private-image-compose.yml"
 export INSTALL_DIR="$TMP/private-image" INSTALLER_COMPOSE_SOURCE="$TMP/private-image-compose.yml"
 if bash install.sh --app-name Test --api-domain api.test.example --app-domain app.test.example --skip-dns-check </dev/null > "$TMP/private-image.log" 2>&1; then exit 1; fi
-grep -q 'published self-hosted backend/frontend images' "$TMP/private-image.log"
+grep -q 'approved self-hosted backend/frontend images' "$TMP/private-image.log"
 test ! -e "$INSTALL_DIR/.env"
 echo 'Installer smoke checks passed'

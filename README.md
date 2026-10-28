@@ -14,9 +14,9 @@ bash tests/install-smoke.sh
 ```
 
 
-## Revised image distribution 1.0.11
+## Restricted image distribution 1.0.12
 
-Backend/frontend images 1.0.11 are published for linux/amd64. Use these matching installer assets for that release. The application repository remains private. This public installer repository contains deployment scripts/configuration, not ERP or console source.
+Backend/frontend images 1.0.12 are available for linux/amd64 to authorized accounts only. Use these matching installer assets for that release. The application repository remains private. This public installer repository contains deployment scripts/configuration, not ERP or console source.
 
 The revised images exclude the private console, NuSaaS subscription/trial billing and paid Hosted WhatsApp. Business owners register, verify email and onboard in the ERP; no internal platform-admin account is created. Backup helpers retain local archives by default; deleting old copies requires an explicit positive `BACKUP_RETENTION_DAYS` process setting. Local helper output is not encrypted or automatically copied off-server.
 
@@ -38,11 +38,16 @@ OSCU production transmission defaults off. Only the installation operator can
 explicitly allow its own approved workspace IDs after the applicable KRA process.
 No payment, KRA initialization or gateway registration runs during installation.
 
-The current published images remain 1.0.11. The queued eTIMS product setup and
-new fiscal-receipt flows require a newer published image release. Do not bump
-VERSION or advertise the newer workflows as installed until matching artifacts
-have been built, tested and published. Documentation and environment changes do
-not upgrade the application image.
+The existing 1.0.12 images have been moved into one private repository. They do not include subsequent cloud People changes. Updating installer references does not rebuild application images.
 
 Guides: https://docs.nusaas.com/settings/kra-etims and
 https://docs.nusaas.com/settings/mpesa.
+
+## Private registry access
+
+Public image distribution is paused while distribution terms are reviewed. Both images use the private `ghostdev1/nusaas-backend` repository:
+
+- `backend-1.0.12` — self-hosted API, workers, scheduler and WebSockets.
+- `frontend-1.0.12` — self-hosted web application.
+
+An explicitly authorized Docker Hub account must run `docker login` on the installation server before using the installer or pulling updates. Login alone does not grant repository access; contact NuSaaS for approval. Keep tokens out of installer commands, environment templates and Git. Existing installations must update both image references in their Compose file before pulling these tags. The former public frontend repository is retired.

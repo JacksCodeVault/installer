@@ -17,8 +17,8 @@ assert 'Passwords and generated secrets are never collected here' in html
 compose = Path('docker-compose.yml').read_text()
 assert 'nusaas-docs' not in compose and '\n  docs:' not in compose
 assert 'watchtower' not in compose
-assert 'nusaas-backend:${NUSAAS_VERSION' in compose
-assert 'nusaas-frontend:${NUSAAS_VERSION' in compose
+assert 'nusaas-backend:backend-${NUSAAS_VERSION' in compose
+assert 'nusaas-backend:frontend-${NUSAAS_VERSION' in compose
 assert 'caddy:2.11.7-alpine' in compose
 print('Installer site checks passed')
 

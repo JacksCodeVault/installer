@@ -2,7 +2,7 @@
 # Application images are pinned through NUSAAS_VERSION; updates are user initiated.
 
 x-backend-common: &backend-common
-  image: ghostdev1/nusaas-backend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
+  image: ghostdev1/nusaas-backend:backend-${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
   restart: unless-stopped
   env_file: .env
   environment:
@@ -83,7 +83,7 @@ services:
       cache: { condition: service_healthy }
 
   web:
-    image: ghostdev1/nusaas-frontend:${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
+    image: ghostdev1/nusaas-backend:frontend-${NUSAAS_VERSION:?Set NUSAAS_VERSION in .env}
     container_name: nusaas-web
     restart: unless-stopped
     env_file: web/.env.frontend

@@ -33,7 +33,7 @@ umask 077 # Keep generated credentials private, even if the process exits early.
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
-NUSAAS_VERSION="${NUSAAS_VERSION:-1.0.11}"
+NUSAAS_VERSION="${NUSAAS_VERSION:-1.0.12}"
 APP_NAME="${APP_NAME:-}"
 APP_URL="${APP_URL:-}"
 FRONTEND_URL="${FRONTEND_URL:-}"
@@ -213,8 +213,8 @@ if grep -Eq 'nusaas-docs|^[[:space:]]+(docs|console|platform|watchtower):' "${CO
   die "This compose file includes services outside the self-hosted ERP stack. Download the current self-hosted compose file."
 fi
 
-for image in nusaas-backend nusaas-frontend; do
-  grep -Fq "ghostdev1/${image}:\${NUSAAS_VERSION" "${COMPOSE_FILE}" || die "Use the published self-hosted backend/frontend images in the base Compose file."
+for image in backend frontend; do
+  grep -Fq "ghostdev1/nusaas-backend:${image}-\${NUSAAS_VERSION" "${COMPOSE_FILE}" || die "Use the approved self-hosted backend/frontend images in the base Compose file."
 done
 
 # ── 4. Interactive configuration ──────────────────────────────────────────────
@@ -656,7 +656,7 @@ ${COMPOSE_CMD} -f "${COMPOSE_FILE}" config --quiet >/dev/null || die "Configurat
 
 # ── 8. Pull images ────────────────────────────────────────────────────────────
 echo
-info "Pulling NuSaaS images from Docker Hub..."
+info "Pulling private NuSaaS images from Docker Hub (requires authorized docker login)..."
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull
 success "Images pulled."
 
